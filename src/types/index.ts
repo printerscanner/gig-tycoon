@@ -74,4 +74,7 @@ export interface CityTile {
   row: number;
   col: number;
   emoji: string;
+  isStreet?: boolean;
+  displayName?: string;
+  bgColor?: string;
 }

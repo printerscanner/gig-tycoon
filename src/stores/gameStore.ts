@@ -114,13 +114,7 @@ const initialState: GameState = {
   gameSpeed: 1,
   investorFunding: 0,
   monthlyTarget: 50, // First investor goal: 50 deliveries
-  notifications: [
-    generateNotification(
-      "info",
-      "Welcome to Gig Tycoon!",
-      "You start with 2 free workers! Jobs will auto-generate and workers will auto-assign to them."
-    ),
-  ],
+  notifications: [],
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({

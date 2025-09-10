@@ -37,7 +37,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>📊 GIG TYCOON METRICS</SidebarGroupLabel>
+          <SidebarGroupLabel>STATS</SidebarGroupLabel>
           <SidebarGroupContent>
             <div className="p-3 space-y-3 text-sm">
               <div className="flex justify-between">
@@ -83,9 +83,7 @@ export function AppSidebar() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>
-            👥 WORKER ROSTER ({workers.length})
-          </SidebarGroupLabel>
+          <SidebarGroupLabel>CONTRACTORS ({workers.length})</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {workers.map((worker) => (
@@ -171,17 +169,6 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               ))}
 
-              {workers.length < 2 && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={hireWorker}
-                    className="w-full border-dashed border-2 border-green-300 hover:border-green-400 bg-green-50"
-                  >
-                    <span>+ Hire Starter Worker (FREE)</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-
               {workers.length >= 2 && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
@@ -189,7 +176,7 @@ export function AppSidebar() {
                     className="w-full border-dashed border-2 border-gray-300 hover:border-gray-400"
                     disabled={cash < 200}
                   >
-                    <span>+ Hire Worker ({formatCurrency(2000)})</span>
+                    <span>+ Hire Contractor ({formatCurrency(2000)})</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}

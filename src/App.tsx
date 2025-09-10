@@ -8,7 +8,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { Toaster } from "sonner";
+import { Toaster, toast } from "sonner";
+import { useEffect } from "react";
 
 function App() {
   // Use the game loop hook to handle automatic updates
@@ -17,6 +18,18 @@ function App() {
   // Get state and actions from Zustand store
   const { workers, jobs, handleTileClick, completedJobs, monthlyTarget } =
     useGameStore();
+
+  // Show welcome message on app start
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      toast.info("🎉 Welcome to Gig Tycoon!", {
+        description: "You start with 2 free workers! Jobs will auto-generate and workers will auto-assign to them.",
+        duration: 6000,
+      });
+    }, 1000); // Delay to ensure app is fully loaded
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <Layout>

@@ -9,7 +9,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useGameStore } from "@/stores/gameStore";
-import type { Job, Notification } from "@/types";
+import type { Job } from "@/types";
 
 export function RightSidebar() {
   // Use the entire store and extract what we need
@@ -17,10 +17,7 @@ export function RightSidebar() {
   const {
     jobs,
     workers,
-    notifications,
     generateJob,
-    dismissNotification,
-    acceptInvestorDeal,
   } = store;
 
   const formatCurrency = (amount: number) => `$${amount.toFixed(0)}`;
@@ -84,57 +81,6 @@ export function RightSidebar() {
   return (
     <Sidebar side="right" className="w-72 m-2">
       <SidebarContent>
-        {notifications.length > 0 && (
-          <SidebarGroup>
-            <SidebarGroupLabel className="text-xs">🔔 ALERTS</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {notifications.slice(0, 2).map((notification) => (
-                  <SidebarMenuItem key={notification.id}>
-                    <div
-                      className={`p-2 border rounded text-xs ${
-                        notification.type === "investor"
-                          ? "bg-yellow-50 border-yellow-300"
-                          : "bg-gray-50"
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex gap-1 flex-1">
-                          <span>{getNotificationIcon(notification.type)}</span>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium text-xs truncate">
-                              {notification.title}
-                            </div>
-                            <div className="text-gray-600 text-xs leading-tight">
-                              {notification.message.length > 40
-                                ? notification.message.substring(0, 40) + "..."
-                                : notification.message}
-                            </div>
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => dismissNotification(notification.id)}
-                          className="text-xs text-gray-400 hover:text-gray-600 ml-1"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                      {notification.type === "investor" && (
-                        <button
-                          onClick={acceptInvestorDeal}
-                          className="mt-2 w-full text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
-                        >
-                          Accept Deal! 💰
-                        </button>
-                      )}
-                    </div>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        )}
-
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs">
             📋 JOBS ({pendingJobs.length})
