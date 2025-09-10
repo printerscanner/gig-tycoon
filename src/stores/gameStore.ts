@@ -49,9 +49,40 @@ const SARCASTIC_MESSAGES = [
 ];
 
 const generateRandomPosition = () => ({
-  row: Math.floor(Math.random() * 8),
-  col: Math.floor(Math.random() * 8),
+  row: Math.floor(Math.random() * 10),
+  col: Math.floor(Math.random() * 10),
 });
+
+// Check if a position is a road (matches CityGrid road logic)
+const isRoadPosition = (row: number, col: number) => {
+  return row === 2 || row === 5 || row === 8 || col === 2 || col === 5 || col === 8;
+};
+
+// Generate a random road position for worker spawning
+const generateRandomRoadPosition = () => {
+  const roads = [];
+  for (let row = 0; row < 10; row++) {
+    for (let col = 0; col < 10; col++) {
+      if (isRoadPosition(row, col)) {
+        roads.push({ row, col });
+      }
+    }
+  }
+  return roads[Math.floor(Math.random() * roads.length)];
+};
+
+// Generate a random building position for job pickup/dropoff (no roads)
+const generateRandomBuildingPosition = () => {
+  const buildings = [];
+  for (let row = 0; row < 10; row++) {
+    for (let col = 0; col < 10; col++) {
+      if (!isRoadPosition(row, col)) {
+        buildings.push({ row, col });
+      }
+    }
+  }
+  return buildings[Math.floor(Math.random() * buildings.length)];
+};
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
@@ -140,7 +171,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       stamina: Math.floor(Math.random() * 30) + 60, // 60-90
       happiness: Math.floor(Math.random() * 20) + 70, // 70-90
       wage: 8, // Starting wage $8 per job
-      position: generateRandomPosition(),
+      position: generateRandomRoadPosition(), // Start workers on roads
       isWorking: false,
       totalEarned: 0,
       jobsCompleted: 0,
@@ -193,8 +224,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const newJob: Job = {
       id: generateId(),
       type,
-      pickup: generateRandomPosition(),
-      dropoff: generateRandomPosition(),
+      pickup: generateRandomBuildingPosition(),
+      dropoff: generateRandomBuildingPosition(),
       payment: urgency * 5 + Math.floor(Math.random() * 10) + 10, // $15-35 based on urgency
       timeCreated: Date.now(),
       status: "pending",
@@ -355,12 +386,53 @@ export const useGameStore = create<GameStore>((set, get) => ({
             : baseSpeed;
 
           if (Math.random() < speed) {
-            // Smart pathfinding - move towards target
-            if (row < targetRow) newRow++;
-            else if (row > targetRow) newRow--;
-
-            if (col < targetCol) newCol++;
-            else if (col > targetCol) newCol--;
+            // Smart pathfinding - move towards target, but only on roads unless at destination
+            const reachedTarget = row === targetRow && col === targetCol;
+            
+            if (reachedTarget) {
+              // Worker is at destination, no need to move
+            } else {
+              // Try to move towards target
+              let nextRow = row;
+              let nextCol = col;
+              
+              // Prioritize moving on roads
+              if (row < targetRow) nextRow++;
+              else if (row > targetRow) nextRow--;
+              
+              if (col < targetCol) nextCol++;
+              else if (col > targetCol) nextCol--;
+              
+              // Only move if the next position is a road OR if we're reaching the final destination
+              const nextIsDestination = nextRow === targetRow && nextCol === targetCol;
+              const nextIsRoad = isRoadPosition(nextRow, nextCol);
+              
+              if (nextIsRoad || nextIsDestination) {
+                newRow = nextRow;
+                newCol = nextCol;
+              } else {
+                // Find nearest road position that gets us closer to target
+                const roadOptions = [
+                  { row: row - 1, col }, { row: row + 1, col },
+                  { row, col: col - 1 }, { row, col: col + 1 }
+                ].filter(pos => 
+                  pos.row >= 0 && pos.row < 10 && 
+                  pos.col >= 0 && pos.col < 10 && 
+                  isRoadPosition(pos.row, pos.col)
+                );
+                
+                if (roadOptions.length > 0) {
+                  // Pick the road option that gets us closest to target
+                  const bestOption = roadOptions.reduce((best, option) => {
+                    const bestDistance = Math.abs(best.row - targetRow) + Math.abs(best.col - targetCol);
+                    const optionDistance = Math.abs(option.row - targetRow) + Math.abs(option.col - targetCol);
+                    return optionDistance < bestDistance ? option : best;
+                  });
+                  newRow = bestOption.row;
+                  newCol = bestOption.col;
+                }
+              }
+            }
           }
 
           const reachedTarget = newRow === targetRow && newCol === targetCol;
@@ -388,11 +460,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
           };
         }
 
-        // If worker is idle, occasionally move them to a random location
-        if (!worker.isWorking && Math.random() < 0.1) {
+        // If worker is idle, occasionally move them to a random road location
+        if (!worker.isWorking && Math.random() < 0.05) { // Reduced frequency
           return {
             ...worker,
-            targetPosition: generateRandomPosition(),
+            targetPosition: generateRandomRoadPosition(),
           };
         }
 
