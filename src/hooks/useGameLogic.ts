@@ -4,12 +4,17 @@ import type { GameState, Worker, Job } from "@/types";
 const INITIAL_GAME_STATE: GameState = {
   cash: 500,
   reputation: 50,
+  workerMorale: 50,
   completedJobs: 0,
   workers: [],
   jobs: [],
+  customers: [],
   gameStartTime: Date.now(),
   currentDay: 1,
   gameSpeed: 1,
+  investorFunding: 0,
+  monthlyTarget: 50,
+  notifications: [],
 };
 
 const WORKER_NAMES = [
@@ -54,6 +59,7 @@ export function useGameLogic() {
       isWorking: false,
       totalEarned: 0,
       jobsCompleted: 0,
+      traits: [],
     };
 
     setGameState((prev) => ({
@@ -67,7 +73,6 @@ export function useGameLogic() {
     const jobTypes: Job["type"][] = [
       "delivery",
       "rideshare",
-      "freelance",
       "labor",
     ];
     const type = jobTypes[Math.floor(Math.random() * jobTypes.length)];
@@ -81,7 +86,7 @@ export function useGameLogic() {
       timeCreated: Date.now(),
       status: "pending",
       description: `${type} job - deliver from pickup to dropoff`,
-      difficulty: Math.floor(Math.random() * 3) + 1,
+      urgency: Math.floor(Math.random() * 3) + 1,
     };
 
     setGameState((prev) => ({
