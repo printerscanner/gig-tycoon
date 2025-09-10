@@ -58,7 +58,32 @@ const initialState: GameState = {
   reputation: 85,
   workerMorale: 75,
   completedJobs: 0,
-  workers: [],
+  workers: [
+    {
+      id: 'worker-1',
+      name: 'Alex',
+      stamina: 80,
+      happiness: 75,
+      wage: 8,
+      position: { row: 2, col: 2 },
+      isWorking: false,
+      totalEarned: 0,
+      jobsCompleted: 0,
+      traits: [{ name: 'Reliable', description: 'Always on time', effect: 'positive' }],
+    },
+    {
+      id: 'worker-2', 
+      name: 'Sam',
+      stamina: 70,
+      happiness: 80,
+      wage: 8,
+      position: { row: 5, col: 5 },
+      isWorking: false,
+      totalEarned: 0,
+      jobsCompleted: 0,
+      traits: [{ name: 'Hustler', description: 'Works extra fast', effect: 'positive' }],
+    }
+  ],
   jobs: [],
   customers: [],
   gameStartTime: Date.now(),
@@ -67,13 +92,13 @@ const initialState: GameState = {
   investorFunding: 0,
   monthlyTarget: 50, // First investor goal: 50 deliveries
   notifications: [
-    generateNotification('info', 'Welcome to Gig Tycoon!', 'Workers will automatically take jobs when available. Hire more workers to handle the demand!'),
+    generateNotification('info', 'Welcome to Gig Tycoon!', 'You start with 2 free workers! Jobs will auto-generate and workers will auto-assign to them.'),
   ],
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
   ...initialState,
-  lastJobGeneration: Date.now(),
+  lastJobGeneration: Date.now() - 6000, // Start 6 seconds ago to trigger immediate job generation
 
   hireWorker: () => {
     const state = get();
@@ -97,6 +122,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     };
 
     set({
+      ...state,
       cash: state.cash - hiringCost,
       workers: [...state.workers, newWorker],
       notifications: [
@@ -129,9 +155,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
       urgency,
     };
 
-    set(state => ({
-      jobs: [...state.jobs, newJob],
-    }));
+    const currentState = get();
+    set({
+      jobs: [...currentState.jobs, newJob],
+    });
   },
 
   assignJob: (jobId: string, workerId: string) => {
@@ -142,6 +169,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!worker || !job || worker.isWorking) return;
 
     set({
+      ...state,
       jobs: state.jobs.map(j =>
         j.id === jobId ? { ...j, status: 'assigned' as const, assignedWorkerId: workerId } : j
       ),
@@ -158,12 +186,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   selectWorker: (workerId: string) => {
     set(state => ({
+      ...state,
       selectedWorkerId: state.selectedWorkerId === workerId ? undefined : workerId,
     }));
   },
 
   moveWorker: (workerId: string, targetRow: number, targetCol: number) => {
     set(state => ({
+      ...state,
       workers: state.workers.map(worker =>
         worker.id === workerId 
           ? { ...worker, targetPosition: { row: targetRow, col: targetCol } }
@@ -188,6 +218,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const wageDiff = newWage - oldWage;
     
     set({
+      ...state,
       workers: state.workers.map(w =>
         w.id === workerId ? { ...w, wage: newWage } : w
       ),
@@ -201,24 +232,31 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   updateGameState: () => {
+    // Handle job generation OUTSIDE of the main state update
+    const now = Date.now();
+    const currentState = get();
+    const timeSinceLastJob = now - currentState.lastJobGeneration;
+    const jobGenerationInterval = Math.max(2000, 5000 - (currentState.completedJobs * 50));
+    
+    if (timeSinceLastJob > jobGenerationInterval) {
+      // Generate jobs first, then update game state
+      const jobsToGenerate = Math.floor(Math.random() * 2) + 1;
+      for (let i = 0; i < jobsToGenerate; i++) {
+        get().generateJob();
+      }
+      // Update the last generation time
+      set(state => ({ ...state, lastJobGeneration: now }));
+      return; // Exit early to let the jobs be processed in the next cycle
+    }
+
+    // Auto-assignment logic (every 3 seconds)
+    if (Math.floor(timeSinceLastJob / 1000) % 3 === 0 && timeSinceLastJob % 1000 < 100) {
+      get().autoAssignJobs();
+    }
+    
+    // Now handle the main game state update
     set(state => {
       const now = Date.now();
-      
-      // Auto-generate jobs every 5-15 seconds based on demand
-      const timeSinceLastJob = now - state.lastJobGeneration;
-      const jobGenerationInterval = Math.max(3000, 8000 - (state.completedJobs * 100)); // Faster as you progress
-      
-      if (timeSinceLastJob > jobGenerationInterval) {
-        // Generate 1-3 jobs at once
-        const jobsToGenerate = Math.floor(Math.random() * 3) + 1;
-        for (let i = 0; i < jobsToGenerate; i++) {
-          get().generateJob();
-        }
-        set({ lastJobGeneration: now });
-      }
-
-      // Auto-assign jobs to available workers
-      get().autoAssignJobs();
 
       // Move workers towards their target (enhanced AI movement)
       const updatedWorkers = state.workers.map(worker => {
@@ -237,9 +275,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
           let newRow = row;
           let newCol = col;
           
-          // Apply trait effects to movement speed
-          const speed = worker.traits.some(t => t.name === 'Hustler') ? 2 : 
-                       worker.traits.some(t => t.name === 'Lazy') ? 0.5 : 1;
+          // Apply trait effects to movement speed (faster for visibility)
+          const baseSpeed = 0.3; // Faster movement so you can see workers traveling
+          const speed = worker.traits.some(t => t.name === 'Hustler') ? baseSpeed * 1.5 : 
+                       worker.traits.some(t => t.name === 'Lazy') ? baseSpeed * 0.5 : baseSpeed;
           
           if (Math.random() < speed) {
             // Smart pathfinding - move towards target
@@ -282,8 +321,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return worker;
       });
 
-      // Handle job completion and ratings
+      // Handle job completion and ratings (but preserve recently created jobs)
       const updatedJobs = state.jobs.map(job => {
+        // Don't process jobs that were just created (less than 1 second old)
+        if (job.status === 'pending' && (now - job.timeCreated) < 1000) {
+          return job; // Keep the job as-is
+        }
+        
         if (job.status === 'assigned' && job.assignedWorkerId) {
           const worker = updatedWorkers.find(w => w.id === job.assignedWorkerId);
           if (worker && 
@@ -386,6 +430,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       }
 
       return {
+        ...state, // Spread the entire state first
         workers: finalWorkers,
         jobs: updatedJobs,
         cash: state.cash + earnedThisCycle,
@@ -399,6 +444,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   acceptInvestorDeal: () => {
     set(state => ({
+      ...state,
       cash: state.cash + 20000,
       investorFunding: 20000,
       monthlyTarget: 50,
@@ -411,6 +457,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   dismissNotification: (notificationId: string) => {
     set(state => ({
+      ...state,
       notifications: state.notifications.filter(n => n.id !== notificationId),
     }));
   },
@@ -425,8 +472,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   autoAssignJobs: () => {
     const state = get();
+    const now = Date.now();
     const availableWorkers = state.workers.filter(w => !w.isWorking);
-    const pendingJobs = state.jobs.filter(j => j.status === 'pending');
+    // Only assign jobs that have been pending for at least 2 seconds (so they're visible first)
+    const pendingJobs = state.jobs.filter(j => 
+      j.status === 'pending' && 
+      (now - j.timeCreated) > 2000
+    );
     
     if (availableWorkers.length === 0 || pendingJobs.length === 0) return;
 
