@@ -34,8 +34,8 @@ function App() {
 
   return (
     <Layout>
-      <div className="flex-1 p-4">
-        <div className="mb-6 text-center">
+      <div className="flex flex-col h-full w-full">
+        <div className="mb-4 text-center">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
             GIG TYCOON
           </h1>
@@ -49,7 +49,7 @@ function App() {
           </div>
         </div>
 
-        <div className="flex justify-center mb-6">
+        <div className="flex-1 w-full">
           <CityGrid
             workers={workers}
             jobs={jobs}

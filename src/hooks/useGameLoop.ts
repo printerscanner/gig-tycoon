@@ -7,7 +7,7 @@ export function useGameLoop() {
   useEffect(() => {
     const interval = setInterval(() => {
       updateGameState();
-    }, 1000);
+    }, 500); // Reduced from 1000ms to 500ms for faster movement
 
     return () => clearInterval(interval);
   }, [updateGameState]);

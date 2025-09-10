@@ -9,12 +9,18 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   return (
     <SidebarProvider>
-      <AppSidebar />
-      <main className="flex-1">
-        <SidebarTrigger />
-        {children}
-      </main>
-      <RightSidebar />
+      <div className="flex h-screen w-full">
+        <AppSidebar />
+        <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <SidebarTrigger className="self-start" />
+          <div className="flex-1 flex items-center justify-center px-4 py-2">
+            <div className="w-full max-w-6xl">
+              {children}
+            </div>
+          </div>
+        </main>
+        <RightSidebar />
+      </div>
     </SidebarProvider>
   );
 }

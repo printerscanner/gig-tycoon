@@ -19,7 +19,7 @@ export function AppSidebar() {
     monthlyTarget,
     workers,
     hireWorker,
-    adjustWorkerWage,
+    serviceFee,
   } = useGameStore();
 
   const formatCurrency = (amount: number) => `$${amount.toFixed(0)}`;
@@ -127,31 +127,8 @@ export function AppSidebar() {
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span>� Wage/Job:</span>
-                          <div className="flex gap-1">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                adjustWorkerWage(
-                                  worker.id,
-                                  Math.max(5, worker.wage - 1)
-                                );
-                              }}
-                              className="w-4 h-4 text-xs bg-red-100 hover:bg-red-200 rounded"
-                            >
-                              -
-                            </button>
-                            <span>{formatCurrency(worker.wage)}</span>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                adjustWorkerWage(worker.id, worker.wage + 1);
-                              }}
-                              className="w-4 h-4 text-xs bg-green-100 hover:bg-green-200 rounded"
-                            >
-                              +
-                            </button>
-                          </div>
+                          <span>💰 Platform Fee:</span>
+                          <span>{serviceFee}%</span>
                         </div>
                         <div className="flex justify-between">
                           <span>📈 Jobs:</span>

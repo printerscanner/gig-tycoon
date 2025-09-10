@@ -18,6 +18,8 @@ export function RightSidebar() {
     jobs,
     workers,
     generateJob,
+    serviceFee,
+    adjustServiceFee,
   } = store;
 
   const formatCurrency = (amount: number) => `$${amount.toFixed(0)}`;
@@ -64,6 +66,38 @@ export function RightSidebar() {
   return (
     <Sidebar side="right" className="w-72 m-2">
       <SidebarContent>
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs">
+            💰 SERVICE FEE
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <div className="p-2 border rounded bg-yellow-50">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium">Platform Cut:</span>
+                <span className="text-sm font-bold">{serviceFee}%</span>
+              </div>
+              <div className="text-xs text-gray-600 mb-2">
+                Workers keep {100 - serviceFee}% of job payments
+              </div>
+              <div className="flex gap-1">
+                {[10, 15, 20, 25, 30].map((fee) => (
+                  <button
+                    key={fee}
+                    onClick={() => adjustServiceFee(fee)}
+                    className={`px-2 py-1 text-xs rounded ${
+                      serviceFee === fee
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-200 hover:bg-gray-300"
+                    }`}
+                  >
+                    {fee}%
+                  </button>
+                ))}
+              </div>
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs">
             📋 JOBS ({pendingJobs.length})

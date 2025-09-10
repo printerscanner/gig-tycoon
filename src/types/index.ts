@@ -4,7 +4,6 @@ export interface Worker {
   name: string;
   stamina: number; // 0-100, affects speed
   happiness: number; // 0-100, affects quality
-  wage: number; // per job rate
   position: { row: number; col: number };
   isWorking: boolean;
   assignedJobId?: string;
@@ -12,6 +11,7 @@ export interface Worker {
   totalEarned: number;
   jobsCompleted: number;
   traits: WorkerTrait[];
+  lastPosition?: { row: number; col: number }; // Track previous position to prevent oscillation
 }
 
 export interface WorkerTrait {
@@ -46,6 +46,7 @@ export interface GameState {
   reputation: number; // 0-100, customer satisfaction average
   workerMorale: number; // 0-100, average happiness
   completedJobs: number;
+  serviceFee: number; // Percentage cut the platform takes (workers keep the rest)
   workers: Worker[];
   jobs: Job[];
   customers: Customer[];

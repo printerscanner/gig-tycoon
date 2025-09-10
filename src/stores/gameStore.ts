@@ -18,7 +18,7 @@ interface GameStore extends GameState {
   handleTileClick: (row: number, col: number) => void;
   updateGameState: () => void;
   resetGame: () => void;
-  adjustWorkerWage: (workerId: string, newWage: number) => void;
+  adjustServiceFee: (newFee: number) => void;
   dismissNotification: (notificationId: string) => void;
   acceptInvestorDeal: () => void;
   autoAssignJobs: () => void; // New: auto-assign jobs to available workers
@@ -50,14 +50,14 @@ const SARCASTIC_MESSAGES = [
 
 // Check if a position is a road (matches CityGrid road logic)
 const isRoadPosition = (row: number, col: number) => {
-  return row === 2 || row === 5 || row === 8 || col === 2 || col === 5 || col === 8;
+  return row % 3 === 0 || col % 3 === 0;
 };
 
 // Generate a random road position for worker spawning
 const generateRandomRoadPosition = () => {
   const roads = [];
-  for (let row = 0; row < 10; row++) {
-    for (let col = 0; col < 10; col++) {
+  for (let row = 0; row < 20; row++) {
+    for (let col = 0; col < 20; col++) {
       if (isRoadPosition(row, col)) {
         roads.push({ row, col });
       }
@@ -69,8 +69,8 @@ const generateRandomRoadPosition = () => {
 // Generate a random building position for job pickup/dropoff (no roads)
 const generateRandomBuildingPosition = () => {
   const buildings = [];
-  for (let row = 0; row < 10; row++) {
-    for (let col = 0; col < 10; col++) {
+  for (let row = 0; row < 20; row++) {
+    for (let col = 0; col < 20; col++) {
       if (!isRoadPosition(row, col)) {
         buildings.push({ row, col });
       }
@@ -99,14 +99,14 @@ const initialState: GameState = {
   reputation: 85,
   workerMorale: 75,
   completedJobs: 0,
+  serviceFee: 20, // Platform takes 20% by default, workers keep 80%
   workers: [
     {
       id: "worker-1",
       name: "Alex",
       stamina: 80,
       happiness: 75,
-      wage: 8,
-      position: { row: 2, col: 2 },
+      position: { row: 0, col: 0 },
       isWorking: false,
       totalEarned: 0,
       jobsCompleted: 0,
@@ -119,8 +119,7 @@ const initialState: GameState = {
       name: "Sam",
       stamina: 70,
       happiness: 80,
-      wage: 8,
-      position: { row: 5, col: 5 },
+      position: { row: 6, col: 6 },
       isWorking: false,
       totalEarned: 0,
       jobsCompleted: 0,
@@ -165,7 +164,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       name: WORKER_NAMES[state.workers.length % WORKER_NAMES.length],
       stamina: Math.floor(Math.random() * 30) + 60, // 60-90
       happiness: Math.floor(Math.random() * 20) + 70, // 70-90
-      wage: 8, // Starting wage $8 per job
       position: generateRandomRoadPosition(), // Start workers on roads
       isWorking: false,
       totalEarned: 0,
@@ -291,32 +289,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  adjustWorkerWage: (workerId: string, newWage: number) => {
+  adjustServiceFee: (newFee: number) => {
     const state = get();
-    const worker = state.workers.find((w) => w.id === workerId);
-    if (!worker) return;
-
-    const oldWage = worker.wage;
-    const wageDiff = newWage - oldWage;
-
+    
+    // Clamp service fee between 0% and 50%
+    const clampedFee = Math.max(0, Math.min(50, newFee));
+    
     set({
       ...state,
-      workers: state.workers.map((w) =>
-        w.id === workerId ? { ...w, wage: newWage } : w
-      ),
-      notifications:
-        wageDiff < 0
-          ? [
-              ...state.notifications,
-              generateNotification(
-                "warning",
-                `${worker.name} is not happy`,
-                SARCASTIC_MESSAGES[
-                  Math.floor(Math.random() * SARCASTIC_MESSAGES.length)
-                ]
-              ),
-            ]
-          : state.notifications,
+      serviceFee: clampedFee,
+    });
+    
+    toast.info(`💰 Service fee updated to ${clampedFee}%`, {
+      description: `Workers keep ${100 - clampedFee}% of each job payment`,
     });
   },
 
@@ -369,6 +354,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
           const { row, col } = worker.position;
           const { row: targetRow, col: targetCol } = worker.targetPosition;
 
+          // Check if worker is stuck (same position for several ticks)
+          if (worker.lastPosition && 
+              worker.lastPosition.row === row && 
+              worker.lastPosition.col === col) {
+            console.log(`Worker stuck at ${row},${col} trying to reach ${targetRow},${targetCol}`);
+          }
+
           let newRow = row;
           let newCol = col;
 
@@ -391,40 +383,68 @@ export const useGameStore = create<GameStore>((set, get) => ({
               let nextRow = row;
               let nextCol = col;
               
-              // Prioritize moving on roads
+              // Calculate which direction to move
               if (row < targetRow) nextRow++;
               else if (row > targetRow) nextRow--;
               
               if (col < targetCol) nextCol++;
               else if (col > targetCol) nextCol--;
               
-              // Only move if the next position is a road OR if we're reaching the final destination
-              const nextIsDestination = nextRow === targetRow && nextCol === targetCol;
-              const nextIsRoad = isRoadPosition(nextRow, nextCol);
+              // Check if next position is valid (within bounds)
+              const nextInBounds = nextRow >= 0 && nextRow < 20 && nextCol >= 0 && nextCol < 20;
               
-              if (nextIsRoad || nextIsDestination) {
-                newRow = nextRow;
-                newCol = nextCol;
-              } else {
-                // Find nearest road position that gets us closer to target
-                const roadOptions = [
-                  { row: row - 1, col }, { row: row + 1, col },
-                  { row, col: col - 1 }, { row, col: col + 1 }
-                ].filter(pos => 
-                  pos.row >= 0 && pos.row < 10 && 
-                  pos.col >= 0 && pos.col < 10 && 
-                  isRoadPosition(pos.row, pos.col)
-                );
+              if (nextInBounds) {
+                const nextIsDestination = nextRow === targetRow && nextCol === targetCol;
+                const nextIsRoad = isRoadPosition(nextRow, nextCol);
                 
-                if (roadOptions.length > 0) {
-                  // Pick the road option that gets us closest to target
-                  const bestOption = roadOptions.reduce((best, option) => {
-                    const bestDistance = Math.abs(best.row - targetRow) + Math.abs(best.col - targetCol);
-                    const optionDistance = Math.abs(option.row - targetRow) + Math.abs(option.col - targetCol);
-                    return optionDistance < bestDistance ? option : best;
-                  });
-                  newRow = bestOption.row;
-                  newCol = bestOption.col;
+                // Check if we're going to a building that's our pickup/dropoff destination
+                const isDestinationBuilding = worker.assignedJobId && nextIsDestination;
+                
+                if (nextIsRoad || isDestinationBuilding) {
+                  // Preferred path: use roads OR enter destination building
+                  newRow = nextRow;
+                  newCol = nextCol;
+                } else {
+                  // Try to find a road path first
+                  const roadOptions = [
+                    { row: row - 1, col }, { row: row + 1, col },
+                    { row, col: col - 1 }, { row, col: col + 1 }
+                  ].filter(pos => 
+                    pos.row >= 0 && pos.row < 20 && 
+                    pos.col >= 0 && pos.col < 20 && 
+                    isRoadPosition(pos.row, pos.col)
+                  );
+                  
+                  if (roadOptions.length > 0) {
+                    // Filter out the last position to prevent oscillation
+                    const filteredOptions = worker.lastPosition 
+                      ? roadOptions.filter(option => 
+                          !(option.row === worker.lastPosition!.row && option.col === worker.lastPosition!.col)
+                        )
+                      : roadOptions;
+                    
+                    const optionsToUse = filteredOptions.length > 0 ? filteredOptions : roadOptions;
+                    
+                    // Pick the road option that gets us closest to target
+                    const bestOption = optionsToUse.reduce((best, option) => {
+                      const bestDistance = Math.abs(best.row - targetRow) + Math.abs(best.col - targetCol);
+                      const optionDistance = Math.abs(option.row - targetRow) + Math.abs(option.col - targetCol);
+                      return optionDistance < bestDistance ? option : best;
+                    });
+                    newRow = bestOption.row;
+                    newCol = bestOption.col;
+                  } else {
+                    // No road options available - allow movement through buildings
+                    // if we're close to destination (within 2 tiles)
+                    const currentDistance = Math.abs(row - targetRow) + Math.abs(col - targetCol);
+                    const nextDistance = Math.abs(nextRow - targetRow) + Math.abs(nextCol - targetCol);
+                    
+                    // Allow building traversal if we're close to destination or getting closer
+                    if (currentDistance <= 3 || nextDistance < currentDistance) {
+                      newRow = nextRow;
+                      newCol = nextCol;
+                    }
+                  }
                 }
               }
             }
@@ -432,7 +452,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
           const reachedTarget = newRow === targetRow && newCol === targetCol;
 
-          // If reached pickup, set target to dropoff
+          // Debug logging for stuck workers
+          if (worker.assignedJobId && newRow === row && newCol === col) {
+            const job = state.jobs.find(j => j.id === worker.assignedJobId);
+            if (job) {
+              console.log(`🚫 ${worker.name} stuck at (${row}, ${col}), trying to reach (${targetRow}, ${targetCol})`);
+            }
+          }
+
+          // If reached pickup, instantly move to dropoff
           if (reachedTarget && worker.assignedJobId) {
             const job = state.jobs.find((j) => j.id === worker.assignedJobId);
             if (
@@ -440,10 +468,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
               job.pickup.row === targetRow &&
               job.pickup.col === targetCol
             ) {
+              console.log(`📦 ${worker.name} picked up job at (${targetRow}, ${targetCol}), heading to (${job.dropoff.row}, ${job.dropoff.col})`);
+              // Instant pickup - immediately set target to dropoff
               return {
                 ...worker,
                 position: { row: newRow, col: newCol },
                 targetPosition: job.dropoff,
+              };
+            }
+            // If reached dropoff, clear target immediately for instant completion
+            if (
+              job &&
+              job.dropoff.row === targetRow &&
+              job.dropoff.col === targetCol
+            ) {
+              console.log(`✅ ${worker.name} reached dropoff at (${targetRow}, ${targetCol})`);
+              return {
+                ...worker,
+                position: { row: newRow, col: newCol },
+                targetPosition: undefined, // Clear target for instant completion
               };
             }
           }
@@ -451,6 +494,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           return {
             ...worker,
             position: { row: newRow, col: newCol },
+            lastPosition: { row, col }, // Track previous position
             targetPosition: reachedTarget ? undefined : worker.targetPosition,
           };
         }
@@ -480,9 +524,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
           if (
             worker &&
             worker.position.row === job.dropoff.row &&
-            worker.position.col === job.dropoff.col &&
-            !worker.targetPosition
+            worker.position.col === job.dropoff.col
           ) {
+            // Complete the job as soon as worker reaches dropoff position
+            // No need to check targetPosition since we want instant completion
+            
+            console.log(`🎉 ${worker.name} completed delivery at (${job.dropoff.row}, ${job.dropoff.col})!`);
+            
             // Calculate customer rating based on worker happiness and job urgency
             const baseRating = Math.min(
               5,
@@ -513,13 +561,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
         );
 
         if (completedJob) {
-          // Adjust happiness based on wage vs job payment
-          const wageRatio = worker.wage / (completedJob.payment || 1);
+          // Calculate worker earnings based on service fee
+          const jobPayment = completedJob.payment || 0;
+          const workerEarnings = jobPayment * (100 - state.serviceFee) / 100;
+          const platformCut = jobPayment - workerEarnings;
+          
+          // Add platform cut to cash
+          state.cash += platformCut;
+          
+          // Adjust happiness based on service fee
           let happinessChange = 0;
-
-          if (wageRatio > 0.7) happinessChange = 2; // Good pay = happy
-          else if (wageRatio > 0.4) happinessChange = 0; // OK pay = neutral
-          else happinessChange = -3; // Bad pay = unhappy
+          if (state.serviceFee <= 15) happinessChange = 2; // Low fee = happy
+          else if (state.serviceFee <= 25) happinessChange = 0; // Medium fee = neutral  
+          else happinessChange = -3; // High fee = unhappy
 
           // Apply trait effects
           if (worker.traits.some((t) => t.name === "Burnout-prone")) {
@@ -539,7 +593,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
             isWorking: false,
             assignedJobId: undefined,
             targetPosition: undefined,
-            totalEarned: worker.totalEarned + worker.wage,
+            totalEarned: worker.totalEarned + workerEarnings,
             jobsCompleted: worker.jobsCompleted + 1,
             happiness: newHappiness,
           };
@@ -558,11 +612,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
               .filter((job) => job.status === "completed")
               .slice(-completedThisCycle)
               .reduce(
-                (sum, job) =>
-                  sum +
-                  (job.payment || 0) -
-                  (finalWorkers.find((w) => w.id === job.assignedWorkerId)
-                    ?.wage || 0),
+                (sum, job) => {
+                  const jobPayment = job.payment || 0;
+                  const platformCut = jobPayment * state.serviceFee / 100;
+                  return sum + platformCut;
+                },
                 0
               )
           : 0;
