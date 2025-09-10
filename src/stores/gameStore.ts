@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { toast } from "sonner";
 import type {
   GameState,
   Worker,
@@ -130,7 +131,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const state = get();
     const hiringCost = state.workers.length === 0 ? 0 : 2000; // First 2 workers free, then $2000
 
-    if (state.cash < hiringCost && state.workers.length >= 2) return;
+    if (state.cash < hiringCost && state.workers.length >= 2) {
+      toast.error("💸 Not enough cash to hire a worker!");
+      return;
+    }
 
     const traits = [
       WORKER_TRAITS[Math.floor(Math.random() * WORKER_TRAITS.length)],
@@ -148,6 +152,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
       jobsCompleted: 0,
       traits,
     };
+
+    const isFirstWorker = state.workers.length === 0;
+    const costMessage = isFirstWorker ? "(Free!)" : `(-$${hiringCost})`;
+    
+    toast.success(`🎉 ${newWorker.name} joined your team! ${costMessage}`, {
+      description: `Traits: ${traits.map((t) => t.name).join(", ")}`,
+    });
 
     set({
       ...state,
@@ -201,6 +212,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     };
 
     const currentState = get();
+    
     set({
       jobs: [...currentState.jobs, newJob],
     });
@@ -478,6 +490,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         (job) => job.status === "completed"
       ).length;
       const completedThisCycle = newCompletedJobs - state.completedJobs;
+      
       const earnedThisCycle =
         completedThisCycle > 0
           ? updatedJobs

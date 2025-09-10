@@ -8,6 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "sonner";
 
 function App() {
   // Use the game loop hook to handle automatic updates
@@ -95,6 +96,12 @@ function App() {
           </PopoverContent>
         </Popover>
       </div>
+      <Toaster 
+        position="top-right"
+        richColors
+        closeButton
+        duration={4000}
+      />
     </Layout>
   );
 }
