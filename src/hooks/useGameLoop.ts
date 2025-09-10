@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
-import { useGameStore } from '@/stores/gameStore';
+import { useEffect } from "react";
+import { useGameStore } from "@/stores/gameStore";
 
 export function useGameLoop() {
-  const updateGameState = useGameStore(state => state.updateGameState);
+  const updateGameState = useGameStore((state) => state.updateGameState);
 
   useEffect(() => {
     const interval = setInterval(() => {

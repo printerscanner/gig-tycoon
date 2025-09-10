@@ -12,8 +12,6 @@ import { useGameStore } from "@/stores/gameStore";
 import type { Job, Notification } from "@/types";
 
 export function RightSidebar() {
-  // Use the entire store and extract what we need
-  const store = useGameStore();
   const {
     jobs,
     workers,
@@ -21,7 +19,7 @@ export function RightSidebar() {
     generateJob,
     dismissNotification,
     acceptInvestorDeal,
-  } = store;
+  } = useGameStore();
 
   const formatCurrency = (amount: number) => `$${amount.toFixed(0)}`;
 
@@ -72,18 +70,9 @@ export function RightSidebar() {
   const assignedJobs = jobs.filter((job) => job.status === "assigned");
   const recentJobs = jobs.filter((job) => job.status === "completed").slice(-3);
 
-  // Debug logging
-  console.log("🔍 UI Debug:", {
-    totalJobs: jobs.length,
-    pendingJobs: pendingJobs.length,
-    assignedJobs: assignedJobs.length,
-    recentJobs: recentJobs.length,
-    jobs: jobs.map((j) => ({ id: j.id, type: j.type, status: j.status })),
-  });
-
   return (
-    <Sidebar side="right" className="w-72 m-2">
-      <SidebarContent>
+    <Sidebar side="right" className="w-72">
+      <SidebarContent className="p-2">
         {notifications.length > 0 && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-xs">🔔 ALERTS</SidebarGroupLabel>
@@ -141,8 +130,7 @@ export function RightSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <div className="text-xs text-gray-500 mb-2 p-1 bg-gray-50 rounded">
-              🔄 Auto-generating | Total: {jobs.length} | Pending:{" "}
-              {pendingJobs.length}
+              🔄 Auto-generating
             </div>
             <SidebarMenu>
               {pendingJobs.slice(0, 3).map((job) => (

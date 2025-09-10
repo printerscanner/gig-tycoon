@@ -17,7 +17,7 @@ export interface Worker {
 export interface WorkerTrait {
   name: string;
   description: string;
-  effect: 'positive' | 'negative' | 'neutral';
+  effect: "positive" | "negative" | "neutral";
 }
 
 export interface Job {
@@ -60,7 +60,7 @@ export interface GameState {
 
 export interface Notification {
   id: string;
-  type: 'info' | 'warning' | 'success' | 'investor' | 'worker' | 'customer';
+  type: "info" | "warning" | "success" | "investor" | "worker" | "customer";
   title: string;
   message: string;
   timestamp: number;
@@ -69,7 +69,7 @@ export interface Notification {
 
 export interface CityTile {
   id: string;
-  type: 'restaurant' | 'home' | 'office' | 'store' | 'park';
+  type: "restaurant" | "home" | "office" | "store" | "park";
   hasJob: boolean;
   row: number;
   col: number;
