@@ -48,11 +48,6 @@ const SARCASTIC_MESSAGES = [
   "Time to update my LinkedIn... again",
 ];
 
-const generateRandomPosition = () => ({
-  row: Math.floor(Math.random() * 10),
-  col: Math.floor(Math.random() * 10),
-});
-
 // Check if a position is a road (matches CityGrid road logic)
 const isRoadPosition = (row: number, col: number) => {
   return row === 2 || row === 5 || row === 8 || col === 2 || col === 5 || col === 8;
