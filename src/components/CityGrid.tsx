@@ -1,11 +1,5 @@
 import React from "react";
 import type { CityTile, Worker, Job } from "@/types";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 interface CityGridProps {
   workers: Worker[];
@@ -89,76 +83,53 @@ const CityGrid: React.FC<CityGridProps> = ({ workers, jobs, onTileClick }) => {
   };
 
   return (
-    <TooltipProvider>
-      <div className="flex flex-col items-center gap-4">
-        <div className="text-center flex items-center gap-2">
-          <h2 className="text-lg font-bold">🏙️ DOWNTOWN DISTRICT</h2>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button className="w-5 h-5 bg-blue-500 text-white rounded-full text-xs font-bold hover:bg-blue-600 transition-colors">
-                ?
-              </button>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-sm p-3">
-              <div className="text-sm space-y-2">
-                <div className="font-semibold">🎮 How to Play:</div>
-                <div>• Jobs auto-generate and appear in the right sidebar</div>
-                <div>• Workers automatically pick up jobs after 2 seconds</div>
-                <div>
-                  • Workers travel from pickup 📍 to dropoff 🎯 locations
-                </div>
-                <div>• Watch workers move around the city grid!</div>
-                <div>• Blue circles = workers, Yellow dots = job locations</div>
-                <div>• Adjust wages to keep workers happy 😊</div>
-                <div>• Complete jobs to earn money and reputation 💰</div>
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-
-        <div className="grid grid-cols-8 gap-1 p-4 bg-gray-100 rounded-lg shadow-lg">
-          {Array.from({ length: GRID_SIZE }).map((_, row) =>
-            Array.from({ length: GRID_SIZE }).map((_, col) => {
-              const tile = generateTile(row, col);
-              const worker = getWorkerAtPosition(row, col);
-              const job = getJobAtPosition(row, col);
-
-              return (
-                <div
-                  key={`${row}-${col}`}
-                  className={getTileStyle(!!worker, !!job)}
-                  onClick={() => onTileClick(row, col)}
-                  title={`${tile.emoji} ${tile.type} (${row}, ${col})`}
-                >
-                  {/* Building emoji */}
-                  <span className="text-base">{tile.emoji}</span>
-
-                  {/* Worker indicator */}
-                  {worker && (
-                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 rounded-full border-2 border-white text-xs flex items-center justify-center text-white font-bold">
-                      {worker.name.charAt(0)}
-                    </div>
-                  )}
-
-                  {/* Job indicator */}
-                  {job && !worker && (
-                    <div className="absolute -top-1 -left-1 w-3 h-3 bg-yellow-500 rounded-full animate-bounce"></div>
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        <div className="flex gap-4 text-xs text-gray-600">
-          <span>🍕🍔 Restaurants</span>
-          <span>🏠 Homes</span>
-          <span>🏢 Offices</span>
-          <span>🛒🏪 Stores</span>
-          <span>🌳 Parks</span>
-        </div>
+    <div className="flex flex-col items-center gap-4">
+      <div className="text-center flex items-center gap-2">
+        <h2 className="text-lg font-bold">DOWNTOWN DISTRICT</h2>
       </div>
-    </TooltipProvider>
+
+      <div className="grid grid-cols-8 gap-1 p-4 bg-gray-100 rounded-lg shadow-lg">
+        {Array.from({ length: GRID_SIZE }).map((_, row) =>
+          Array.from({ length: GRID_SIZE }).map((_, col) => {
+            const tile = generateTile(row, col);
+            const worker = getWorkerAtPosition(row, col);
+            const job = getJobAtPosition(row, col);
+
+            return (
+              <div
+                key={`${row}-${col}`}
+                className={getTileStyle(!!worker, !!job)}
+                onClick={() => onTileClick(row, col)}
+                title={`${tile.emoji} ${tile.type} (${row}, ${col})`}
+              >
+                {/* Building emoji */}
+                <span className="text-base">{tile.emoji}</span>
+
+                {/* Worker indicator */}
+                {worker && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 rounded-full border-2 border-white text-xs flex items-center justify-center text-white font-bold">
+                    {worker.name.charAt(0)}
+                  </div>
+                )}
+
+                {/* Job indicator */}
+                {job && !worker && (
+                  <div className="absolute -top-1 -left-1 w-3 h-3 bg-yellow-500 rounded-full animate-bounce"></div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <div className="flex gap-4 text-xs text-gray-600">
+        <span>🍕🍔 Restaurants</span>
+        <span>🏠 Homes</span>
+        <span>🏢 Offices</span>
+        <span>🛒🏪 Stores</span>
+        <span>🌳 Parks</span>
+      </div>
+    </div>
   );
 };
 

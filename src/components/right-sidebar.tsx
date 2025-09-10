@@ -48,23 +48,6 @@ export function RightSidebar() {
     }
   };
 
-  const getNotificationIcon = (type: Notification["type"]) => {
-    switch (type) {
-      case "investor":
-        return "💰";
-      case "warning":
-        return "⚠️";
-      case "success":
-        return "✅";
-      case "worker":
-        return "👥";
-      case "customer":
-        return "😊";
-      default:
-        return "ℹ️";
-    }
-  };
-
   const pendingJobs = jobs.filter((job) => job.status === "pending");
   const assignedJobs = jobs.filter((job) => job.status === "assigned");
   const recentJobs = jobs.filter((job) => job.status === "completed").slice(-3);

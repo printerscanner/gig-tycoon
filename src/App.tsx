@@ -23,7 +23,8 @@ function App() {
   useEffect(() => {
     const timer = setTimeout(() => {
       toast.info("🎉 Welcome to Gig Tycoon!", {
-        description: "You start with 2 free workers! Jobs will auto-generate and workers will auto-assign to them.",
+        description:
+          "You start with 2 free workers! Jobs will auto-generate and workers will auto-assign to them.",
         duration: 6000,
       });
     }, 1000); // Delay to ensure app is fully loaded
@@ -36,7 +37,7 @@ function App() {
       <div className="flex-1 p-4">
         <div className="mb-6 text-center">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            🚀 GIG TYCOON
+            GIG TYCOON
           </h1>
           <p className="text-gray-600 mt-2">
             Build your gig economy empire! Hire workers, dispatch jobs, balance
@@ -109,12 +110,7 @@ function App() {
           </PopoverContent>
         </Popover>
       </div>
-      <Toaster 
-        position="top-right"
-        richColors
-        closeButton
-        duration={4000}
-      />
+      <Toaster position="top-right" richColors closeButton duration={4000} />
     </Layout>
   );
 }
