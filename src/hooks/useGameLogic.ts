@@ -15,6 +15,7 @@ const INITIAL_GAME_STATE: GameState = {
   investorFunding: 0,
   monthlyTarget: 50,
   notifications: [],
+  serviceFee: 20,
 };
 
 const WORKER_NAMES = [
@@ -54,7 +55,6 @@ export function useGameLogic() {
       name: WORKER_NAMES[Math.floor(Math.random() * WORKER_NAMES.length)],
       stamina: Math.floor(Math.random() * 50) + 50,
       happiness: Math.floor(Math.random() * 30) + 70,
-      wage: Math.floor(Math.random() * 5) + 10,
       position: generateRandomPosition(),
       isWorking: false,
       totalEarned: 0,
@@ -70,11 +70,7 @@ export function useGameLogic() {
   }, [gameState.cash]);
 
   const generateJob = useCallback(() => {
-    const jobTypes: Job["type"][] = [
-      "delivery",
-      "rideshare",
-      "labor",
-    ];
+    const jobTypes: Job["type"][] = ["delivery", "rideshare", "labor"];
     const type = jobTypes[Math.floor(Math.random() * jobTypes.length)];
 
     const newJob: Job = {
