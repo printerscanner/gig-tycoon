@@ -47,9 +47,22 @@ export function RightSidebar() {
 
   const getJobTypeIcon = (job: Job) => {
     // All jobs are food delivery now - use job ID to get consistent icon
-    const foodIcons = ["🍕", "🍔", "🥗", "🍜", "🌮", "🍣", "🍗", "🥪", "🍝", "🍰", "☕", "🥘"];
+    const foodIcons = [
+      "🍕",
+      "🍔",
+      "🥗",
+      "🍜",
+      "🌮",
+      "🍣",
+      "🍗",
+      "🥪",
+      "🍝",
+      "🍰",
+      "☕",
+      "🥘",
+    ];
     // Use job ID to get consistent hash for this job
-    const hash = job.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+    const hash = job.id.split("").reduce((a, b) => a + b.charCodeAt(0), 0);
     return foodIcons[hash % foodIcons.length];
   };
 
@@ -66,9 +79,76 @@ export function RightSidebar() {
     }
   };
 
-  const pendingJobs = jobs.filter((job) => job.status === "pending");
+  const activeJobs = jobs.filter(
+    (job) => job.status === "pending" || job.status === "assigned"
+  );
+  const pendingJobs = jobs.filter((job) => job.status === "pending"); // Keep for existing code
   const assignedJobs = jobs.filter((job) => job.status === "assigned");
   const recentJobs = jobs.filter((job) => job.status === "completed").slice(-3);
+
+  // Get detailed job status based on worker position and job state
+  const getDetailedJobStatus = (job: Job) => {
+    const worker = workers.find((w) => w.assignedJobId === job.id);
+
+    if (!worker) {
+      return {
+        text: "⚡ Unassigned - waiting for courier",
+        color: "text-orange-500",
+      };
+    }
+
+    // Check if worker reached pickup location
+    const atPickup =
+      worker.position.row === job.pickup.row &&
+      worker.position.col === job.pickup.col;
+    // Check if worker reached dropoff location
+    const atDropoff =
+      worker.position.row === job.dropoff.row &&
+      worker.position.col === job.dropoff.col;
+
+    if (job.status === "assigned") {
+      if (atDropoff) {
+        return {
+          text: `📦 Delivered by ${worker.name}!`,
+          color: "text-green-600",
+        };
+      } else if (atPickup) {
+        return {
+          text: `🚛 Out for delivery - ${worker.name}`,
+          color: "text-blue-600",
+        };
+      } else {
+        // Check if closer to pickup or dropoff to determine phase
+        const distanceToPickup =
+          Math.abs(worker.position.row - job.pickup.row) +
+          Math.abs(worker.position.col - job.pickup.col);
+        const distanceToDropoff =
+          Math.abs(worker.position.row - job.dropoff.row) +
+          Math.abs(worker.position.col - job.dropoff.col);
+
+        if (
+          worker.targetPosition &&
+          worker.targetPosition.row === job.pickup.row &&
+          worker.targetPosition.col === job.pickup.col
+        ) {
+          return {
+            text: `🏃 On the way - ${worker.name}`,
+            color: "text-blue-600",
+          };
+        } else {
+          return {
+            text: `🚛 En route to delivery - ${worker.name}`,
+            color: "text-blue-600",
+          };
+        }
+      }
+    }
+
+    return {
+      text: `👤 Assigned to ${worker.name}`,
+      color: "text-blue-600",
+    };
+  };
 
   // Debug logging
   console.log("🔍 UI Debug:", {
@@ -96,7 +176,7 @@ export function RightSidebar() {
                 Platform keeps {platformCommission}% of total order value
               </div>
               <div className="flex gap-1">
-                {[25, 30, 35, 40, 45].map((commission) => (
+                {[0, 10, 15, 20, 30, 40].map((commission) => (
                   <button
                     key={commission}
                     onClick={() => adjustPlatformCommission(commission)}
@@ -180,7 +260,7 @@ export function RightSidebar() {
                           : "bg-gray-400 text-gray-200 cursor-not-allowed"
                       }`}
                     >
-                      📢 Buy Marketing Boost
+                      Marketing Campaign
                     </button>
                     <div className="text-xs text-gray-500 mt-1">
                       Team size: {totalStaff} | Cost: $5k + $2k per staff
@@ -194,15 +274,15 @@ export function RightSidebar() {
 
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs">
-            📋 JOBS ({pendingJobs.length})
+            📋 ACTIVE ORDERS ({activeJobs.length})
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <div className="text-xs text-gray-500 mb-2 p-1 bg-gray-50 rounded">
-              🔄 Auto-generating | Total: {jobs.length} | Pending:{" "}
-              {pendingJobs.length}
+              🔄 Active Orders | Total: {jobs.length} | Active:{" "}
+              {activeJobs.length}
             </div>
             <SidebarMenu>
-              {pendingJobs.slice(0, 8).map((job) => {
+              {activeJobs.slice(0, 8).map((job) => {
                 const urgencyStatus = getJobUrgencyStatus(job);
                 const timeElapsedHours = urgencyStatus.timeElapsed; // Now in game hours
 
@@ -211,17 +291,14 @@ export function RightSidebar() {
                 const timeDisplay =
                   elapsedMinutes === 0 ? "0m" : `${elapsedMinutes}m`;
 
-                const assignedWorker = workers.find(
-                  (w) => w.assignedJobId === job.id
-                );
+                const detailedStatus = getDetailedJobStatus(job);
 
                 return (
                   <SidebarMenuItem key={job.id}>
                     <div className="w-full text-left p-2 border rounded hover:bg-gray-50">
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-medium text-sm">
-                          {getJobTypeIcon(job)}{" "}
-                          {formatCurrency(job.payment)}
+                          {getJobTypeIcon(job)} {formatCurrency(job.payment)}
                         </span>
                         <div className="flex items-center gap-1">
                           <span
@@ -252,25 +329,19 @@ export function RightSidebar() {
                         {job.description}
                       </div>
                       <div className="text-xs mt-1">
-                        {assignedWorker ? (
-                          <span className="text-blue-600">
-                            👤 Assigned to {assignedWorker.name}
-                          </span>
-                        ) : (
-                          <span className="text-orange-500">
-                            ⚡ Unassigned - waiting for courier
-                          </span>
-                        )}
+                        <span className={detailedStatus.color}>
+                          {detailedStatus.text}
+                        </span>
                       </div>
                     </div>
                   </SidebarMenuItem>
                 );
               })}
 
-              {pendingJobs.length === 0 && (
+              {activeJobs.length === 0 && (
                 <SidebarMenuItem>
                   <div className="p-2 text-center text-gray-500 text-xs">
-                    📱 Waiting for jobs...
+                    📱 Waiting for orders...
                   </div>
                 </SidebarMenuItem>
               )}
@@ -293,8 +364,7 @@ export function RightSidebar() {
                     <div className="p-2 border rounded bg-blue-50">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">
-                          {getJobTypeIcon(job)}{" "}
-                          {formatCurrency(job.payment)}
+                          {getJobTypeIcon(job)} {formatCurrency(job.payment)}
                         </span>
                         <span className="text-xs text-blue-600">
                           {worker?.name || "Unknown"}

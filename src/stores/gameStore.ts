@@ -159,14 +159,14 @@ const getDemandMultiplier = (gameHours: number) => {
 const getPriceMultiplier = (gameHours: number) => {
   const hours = gameHours % 24; // Convert to 24-hour cycle
 
-  // Peak hours get surge pricing
+  // Peak hours get modest surge pricing
   if ((hours >= 11 && hours < 14) || (hours >= 17 && hours < 21)) {
-    return 1.3; // 30% price increase
+    return 1.15; // 15% price increase (reduced from 30%)
   }
 
   // Late night premium
   if (hours >= 22 || hours < 6) {
-    return 1.2; // 20% price increase for night orders
+    return 1.1; // 10% price increase for night orders (reduced from 20%)
   }
 
   return 1.0;
@@ -500,17 +500,17 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     const currentState = get();
 
-    // Generate total order value (what customer pays) $50-100
-    const baseOrderValue = Math.random() * 50 + 50; // $50-100 base order
+    // Generate total order value (what customer pays) €20-60
+    const baseOrderValue = Math.random() * 40 + 20; // €20-60 base order
 
     // Add distance bonus (longer distance = higher order value)
     const maxDistance = Math.sqrt(12 * 12 + 12 * 12); // ~17 units
     const normalizedDistance = Math.min(distance / maxDistance, 1); // 0-1 range
-    const distanceBonus = normalizedDistance * 20; // 0-20 dollars distance bonus
+    const distanceBonus = normalizedDistance * 10; // 0-10 euros distance bonus
 
     // Add urgency multiplier and time-based surge pricing
     const priceMultiplier = getPriceMultiplier(currentState.currentTime);
-    const urgencyMultiplier = 1 + (urgency - 1) * 0.15; // 15% per urgency level
+    const urgencyMultiplier = 1 + (urgency - 1) * 0.1; // 10% per urgency level
 
     // Final total order value (what shows up in the game)
     const totalOrderValue = Math.round(
@@ -635,7 +635,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
 
     toast.info(`💵 Courier payout updated: $${clampedPayout.toFixed(2)}`, {
-      description: `Couriers now earn $${clampedPayout} per delivery + tips`,
+      description: `Couriers earn $${clampedPayout} per delivery + tips (€0.5-5 based on performance, <50% chance)`,
     });
   },
 
@@ -643,8 +643,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const now = Date.now();
     const currentState = get();
 
-    // Update game time (faster clock - 1 real second = 1 game hour)
-    const newTime = (currentState.currentTime + 1) % 168; // Wrap around at 168 hours (1 week)
+    // Update game time (slower progression - 1 real second = 0.1 game hours = 6 game minutes)
+    const timeIncrement = 0.1; // 0.1 game hours per update (6 game minutes)
+    const newTime = (currentState.currentTime + timeIncrement) % 168; // Wrap around at 168 hours (1 week)
 
     // Handle job generation with demand multiplier
     const timeSinceLastJob = now - currentState.lastJobGeneration;
@@ -781,7 +782,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const statusUpdatedWorkers = state.workers
         .map((worker) => {
           // Check if worker should be online based on working hours
-          const currentHour = Math.floor(state.currentTime / 60);
+          // currentTime is now in hours (0-168), convert to hour of day (0-23)
+          const currentHour = Math.floor(state.currentTime % 24);
           const startHour = Math.floor(worker.workingHours.start / 60);
           const endHour = Math.floor(worker.workingHours.end / 60);
 
@@ -1135,16 +1137,41 @@ export const useGameStore = create<GameStore>((set, get) => ({
           // Courier gets fixed payout per delivery (player-set $2-4)
           const courierPayment = state.courierPayout;
 
-          // Calculate mood-based tip ($1-5 based on happiness levels)
+          // Calculate tip based on stamina and happiness (max €5, <50% chance)
           let tipAmount = 0;
-          if (worker.happiness >= 80) {
-            tipAmount = Math.random() * 2 + 3; // $3-5 for very happy workers
-          } else if (worker.happiness >= 60) {
-            tipAmount = Math.random() * 2 + 1; // $1-3 for moderately happy workers
-          } else if (worker.happiness >= 40) {
-            tipAmount = Math.random() * 1 + 0.5; // $0.5-1.5 for unhappy workers
+
+          // Base tip chance - less than half the time
+          const baseTipChance = 0.4; // 40% base chance
+
+          // Performance score combines stamina and happiness (0-100 each)
+          const performanceScore = (worker.stamina + worker.happiness) / 2;
+
+          // Adjust tip chance based on performance (20%-60% range)
+          const adjustedTipChance =
+            baseTipChance + (performanceScore - 50) * 0.004; // +/-20% based on performance
+          const finalTipChance = Math.max(
+            0.2,
+            Math.min(0.6, adjustedTipChance)
+          );
+
+          if (Math.random() < finalTipChance) {
+            // Tip amount based on performance score (€0.5 - €5.0)
+            const maxTip = 5.0;
+            const performanceMultiplier = performanceScore / 100; // 0-1 based on performance
+
+            if (performanceScore >= 85) {
+              tipAmount = Math.random() * 1.5 + 3.5; // €3.5-5.0 for excellent performance
+            } else if (performanceScore >= 70) {
+              tipAmount = Math.random() * 1.5 + 2.0; // €2.0-3.5 for good performance
+            } else if (performanceScore >= 50) {
+              tipAmount = Math.random() * 1.0 + 1.0; // €1.0-2.0 for average performance
+            } else {
+              tipAmount = Math.random() * 1.0 + 0.5; // €0.5-1.5 for poor performance
+            }
+
+            // Ensure tip doesn't exceed maximum
+            tipAmount = Math.min(maxTip, tipAmount);
           }
-          // Workers with happiness < 40 get no tips
 
           // Final courier earnings = base payment + tips
           const courierEarnings = courierPayment + tipAmount;
@@ -1313,15 +1340,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
   getJobUrgencyStatus: (job) => {
     const state = get();
     const currentGameTime = state.currentTime;
-    const jobAge = Math.max(0, currentGameTime - job.timeCreated); // Ensure non-negative
-    const maxWaitTime = 10; // 10 minutes for all jobs
-    const timeElapsed = jobAge;
-    const isOverdue = jobAge > maxWaitTime;
+    const jobAgeInHours = Math.max(0, currentGameTime - job.timeCreated); // Job age in game hours
+    const maxWaitTimeInHours = 10; // 10 game hours = 10 minutes display time
+    const timeElapsed = jobAgeInHours; // Return in game hours for UI conversion
+    const isOverdue = jobAgeInHours > maxWaitTimeInHours;
 
     let severity: "normal" | "warning" | "critical" = "normal";
-    if (jobAge > maxWaitTime) {
+    if (jobAgeInHours > maxWaitTimeInHours) {
       severity = "critical";
-    } else if (jobAge > maxWaitTime * 0.7) {
+    } else if (jobAgeInHours > maxWaitTimeInHours * 0.7) {
       severity = "warning";
     }
 
@@ -1418,9 +1445,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
   instantAssignJobs: () => {
     const state = get();
 
-    // Simple check: find workers that are not working
+    // Simple check: find workers that are not working and are online/healthy
     const availableWorkers = state.workers.filter(
-      (w) => !w.isWorking && !w.assignedJobId
+      (w) => !w.isWorking && !w.assignedJobId && w.isOnline && !w.isSick
     );
 
     // Find jobs that need assignment
@@ -1430,10 +1457,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     console.log(`- Total workers: ${state.workers.length}`);
     console.log(`- Available workers: ${availableWorkers.length}`);
     console.log(`- Pending jobs: ${pendingJobs.length}`);
-    
+
     // Debug all workers
     state.workers.forEach((w, i) => {
-      console.log(`  Worker ${i}: ${w.name} - isWorking=${w.isWorking}, assignedJobId=${w.assignedJobId}, isOnline=${w.isOnline}, isSick=${w.isSick}`);
+      console.log(
+        `  Worker ${i}: ${w.name} - isWorking=${w.isWorking}, assignedJobId=${w.assignedJobId}, isOnline=${w.isOnline}, isSick=${w.isSick}`
+      );
     });
 
     if (availableWorkers.length > 0) {

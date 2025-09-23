@@ -36,12 +36,13 @@ export function AppSidebar() {
     );
   };
 
-  const formatGameTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60) % 24;
-    const mins = minutes % 60;
+  const formatGameTime = (gameHours: number) => {
+    // gameHours is now in hours (e.g., 14.5 = 2:30 PM)
+    const hours = Math.floor(gameHours) % 24;
+    const minutes = Math.floor((gameHours % 1) * 60); // Convert decimal part to minutes
     const ampm = hours >= 12 ? "PM" : "AM";
     const displayHours = hours % 12 || 12;
-    return `${displayHours}:${mins.toString().padStart(2, "0")} ${ampm}`;
+    return `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
   };
 
   const getWorkerTraitEmoji = (traits: Array<{ name: string }>) => {

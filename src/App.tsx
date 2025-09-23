@@ -21,9 +21,9 @@ function App() {
   // Show welcome message on app start
   useEffect(() => {
     const timer = setTimeout(() => {
-      toast.info("🎉 Welcome to Gig Tycoon!", {
+      toast.info("🎉 Welcome to Gig Tycoon: Pre-Seed round!", {
         description:
-          "You start with 2 free workers! Jobs will auto-generate and workers will auto-assign to them.",
+          "You developed an app prototype and raised €400,000 from friends and family. You can use this money to hire workers and expand your business.",
         duration: 6000,
       });
     }, 1000); // Delay to ensure app is fully loaded
