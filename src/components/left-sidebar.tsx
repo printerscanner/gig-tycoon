@@ -16,13 +16,32 @@ export function AppSidebar() {
     reputation,
     workerMorale,
     completedJobs,
-    monthlyTarget,
     workers,
+    officeWorkers,
+    supportStaff,
     hireWorker,
-    serviceFee,
+    hireOfficeWorker,
+    currentTime,
   } = useGameStore();
 
-  const formatCurrency = (amount: number) => `$${amount.toFixed(0)}`;
+  const formatCurrency = (amount: number) => `€${amount.toFixed(0)}`;
+
+  // Calculate max capacity based on office workers
+  const calculateMaxCapacity = () => {
+    if (officeWorkers.length === 0) return 10;
+    return (
+      10 +
+      officeWorkers.reduce((total, worker) => total + worker.adminCapacity, 0)
+    );
+  };
+
+  const formatGameTime = (minutes: number) => {
+    const hours = Math.floor(minutes / 60) % 24;
+    const mins = minutes % 60;
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours % 12 || 12;
+    return `${displayHours}:${mins.toString().padStart(2, "0")} ${ampm}`;
+  };
 
   const getWorkerTraitEmoji = (traits: Array<{ name: string }>) => {
     if (traits.some((t) => t.name === "Hustler")) return "⚡";
@@ -41,8 +60,28 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <div className="p-3 space-y-3 text-sm">
               <div className="flex justify-between">
-                <span>💰 Cash on Hand:</span>
-                <span className="font-bold">{formatCurrency(cash)}</span>
+                <span>🕐 Time:</span>
+                <span className="font-bold">{formatGameTime(currentTime)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>💰 Cash:</span>
+                <span
+                  className={`font-bold ${
+                    cash < 0
+                      ? "text-red-600"
+                      : cash < 1000
+                      ? "text-yellow-600"
+                      : "text-green-600"
+                  }`}
+                >
+                  {formatCurrency(cash)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>🛵 Couriers:</span>
+                <span className="font-bold">
+                  {workers.length}/{calculateMaxCapacity()}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>⭐ Reputation:</span>
@@ -57,6 +96,56 @@ export function AppSidebar() {
                 >
                   {reputation.toFixed(0)}/100
                 </span>
+              </div>
+
+              {/* Monthly Expenses Section */}
+              <div className="pt-2 border-t border-gray-200">
+                <div className="text-xs font-semibold text-gray-700 mb-2">
+                  📊 MONTHLY EXPENSES
+                </div>
+                <div className="space-y-1 text-xs">
+                  <div className="flex justify-between">
+                    <span>👥 Office Workers:</span>
+                    <span className="text-red-600">
+                      -${(officeWorkers.length * 10000).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>📞 Support Staff:</span>
+                    <span className="text-red-600">
+                      -${(supportStaff.length * 2500).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>🏢 Rent & Legal:</span>
+                    <span className="text-red-600">
+                      -$
+                      {(
+                        20000 +
+                        workers.length * 1000 +
+                        officeWorkers.length * 2000
+                      ).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>☁️ Cloud/Infrastructure:</span>
+                    <span className="text-red-600">-$5,000+</span>
+                  </div>
+                  <div className="flex justify-between border-t border-gray-300 pt-1 font-semibold">
+                    <span>💸 Total/Month:</span>
+                    <span className="text-red-600">
+                      -$
+                      {(
+                        officeWorkers.length * 10000 +
+                        supportStaff.length * 2500 +
+                        (20000 +
+                          workers.length * 1000 +
+                          officeWorkers.length * 2000) +
+                        5000
+                      ).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
               </div>
               <div className="flex justify-between">
                 <span>😊 Worker Morale:</span>
@@ -74,9 +163,7 @@ export function AppSidebar() {
               </div>
               <div className="flex justify-between">
                 <span>📦 Jobs Done:</span>
-                <span className="font-bold">
-                  {completedJobs}/{monthlyTarget}
-                </span>
+                <span className="font-bold">{completedJobs}</span>
               </div>
             </div>
           </SidebarGroupContent>
@@ -127,10 +214,6 @@ export function AppSidebar() {
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span>💰 Platform Fee:</span>
-                          <span>{serviceFee}%</span>
-                        </div>
-                        <div className="flex justify-between">
                           <span>📈 Jobs:</span>
                           <span>
                             {worker.jobsCompleted} |{" "}
@@ -146,17 +229,73 @@ export function AppSidebar() {
                 </SidebarMenuItem>
               ))}
 
-              {workers.length >= 2 && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={hireWorker}
-                    className="w-full border-dashed border-2 border-gray-300 hover:border-gray-400"
-                    disabled={cash < 200}
-                  >
-                    <span>+ Hire Contractor ({formatCurrency(2000)})</span>
-                  </SidebarMenuButton>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={hireWorker}
+                  className="w-full border-dashed border-2 border-blue-300 hover:border-blue-400 bg-blue-50"
+                  disabled={
+                    cash < 150 || workers.length >= calculateMaxCapacity()
+                  }
+                >
+                  <span>+ Hire Courier (€150)</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>
+            OFFICE WORKERS ({officeWorkers.length})
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {officeWorkers.map((worker) => (
+                <SidebarMenuItem key={worker.id}>
+                  <div className="w-full p-2 border rounded-lg hover:bg-accent bg-orange-50">
+                    <div className="p-2 rounded">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-lg">🏢</span>
+                        <span className="font-medium">{worker.name}</span>
+                        <span className="text-xs bg-orange-100 text-orange-800 px-1 rounded">
+                          ADMIN
+                        </span>
+                      </div>
+
+                      <div className="text-xs space-y-1">
+                        <div className="flex justify-between">
+                          <span>⚡ Efficiency:</span>
+                          <span>{worker.efficiency}/100</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>👥 Capacity:</span>
+                          <span>{worker.adminCapacity} couriers</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>💰 Salary:</span>
+                          <span>
+                            ${worker.monthlySalary.toLocaleString()}/month
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>📈 Total Cost:</span>
+                          <span>{formatCurrency(worker.totalCost)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </SidebarMenuItem>
-              )}
+              ))}
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={hireOfficeWorker}
+                  className="w-full border-dashed border-2 border-orange-300 hover:border-orange-400 bg-orange-50"
+                  disabled={cash < 5000}
+                >
+                  <span>+ Hire Office Worker (€5k-10k)</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

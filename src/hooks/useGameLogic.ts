@@ -13,7 +13,6 @@ const INITIAL_GAME_STATE: GameState = {
   currentDay: 1,
   gameSpeed: 1,
   investorFunding: 0,
-  monthlyTarget: 50,
   notifications: [],
   serviceFee: 20,
 };

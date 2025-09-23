@@ -16,8 +16,7 @@ function App() {
   useGameLoop();
 
   // Get state and actions from Zustand store
-  const { workers, jobs, handleTileClick, completedJobs, monthlyTarget } =
-    useGameStore();
+  const { workers, jobs, handleTileClick } = useGameStore();
 
   // Show welcome message on app start
   useEffect(() => {
@@ -43,10 +42,6 @@ function App() {
             Build your gig economy empire! Hire workers, dispatch jobs, balance
             the books.
           </p>
-          <div className="mt-3 text-sm text-gray-500">
-            Progress: {completedJobs}/{monthlyTarget} jobs to unlock investor
-            funding 💰
-          </div>
         </div>
 
         <div className="flex-1 w-full">

@@ -18,11 +18,33 @@ export function RightSidebar() {
     jobs,
     workers,
     generateJob,
-    serviceFee,
-    adjustServiceFee,
+    platformCommission,
+    adjustPlatformCommission,
+    courierPayout,
+    adjustCourierPayout,
+    getJobUrgencyStatus,
+    buyMarketingBoost,
+    instantAssignJobs,
+    officeWorkers,
+    supportStaff,
+    currentTime,
+    cash,
   } = store;
 
-  const formatCurrency = (amount: number) => `$${amount.toFixed(0)}`;
+  const formatCurrency = (amount: number) => `€${amount.toFixed(2)}`;
+
+  const formatGameTime = (minutes: number) => {
+    const hours = Math.floor(minutes / 60) % 24;
+    const mins = minutes % 60;
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours % 12 || 12;
+    return `${displayHours}:${mins.toString().padStart(2, "0")} ${ampm}`;
+  };
+
+  const isDemandHigh = (minutes: number) => {
+    const hours = Math.floor(minutes / 60) % 24;
+    return (hours >= 11 && hours < 14) || (hours >= 17 && hours < 21);
+  };
 
   const getJobTypeIcon = (type: Job["type"]) => {
     switch (type) {
@@ -68,32 +90,110 @@ export function RightSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs">
-            💰 SERVICE FEE
+            💰 PLATFORM COMMISSION
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <div className="p-2 border rounded bg-yellow-50">
               <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium">Platform Cut:</span>
-                <span className="text-sm font-bold">{serviceFee}%</span>
+                <span className="text-sm font-medium">Commission:</span>
+                <span className="text-sm font-bold">{platformCommission}%</span>
               </div>
               <div className="text-xs text-gray-600 mb-2">
-                Workers keep {100 - serviceFee}% of job payments
+                Platform keeps {platformCommission}% of total order value
               </div>
               <div className="flex gap-1">
-                {[10, 15, 20, 25, 30].map((fee) => (
+                {[25, 30, 35, 40, 45].map((commission) => (
                   <button
-                    key={fee}
-                    onClick={() => adjustServiceFee(fee)}
+                    key={commission}
+                    onClick={() => adjustPlatformCommission(commission)}
                     className={`px-2 py-1 text-xs rounded ${
-                      serviceFee === fee
+                      platformCommission === commission
                         ? "bg-blue-500 text-white"
                         : "bg-gray-200 hover:bg-gray-300"
                     }`}
                   >
-                    {fee}%
+                    {commission}%
                   </button>
                 ))}
               </div>
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs">
+            💵 COURIER PAYOUT
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <div className="p-2 border rounded bg-green-50">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium">Per Delivery:</span>
+                <span className="text-sm font-bold">
+                  ${courierPayout.toFixed(2)}
+                </span>
+              </div>
+              <div className="text-xs text-gray-600 mb-2">
+                Fixed payout per delivery + tips
+              </div>
+
+              <div className="flex gap-1">
+                {[2, 2.5, 3, 3.5, 4].map((payout) => (
+                  <button
+                    key={payout}
+                    onClick={() => adjustCourierPayout(payout)}
+                    className={`px-2 py-1 text-xs rounded ${
+                      Math.abs(courierPayout - payout) < 0.01
+                        ? "bg-green-500 text-white"
+                        : "bg-gray-200 hover:bg-gray-300"
+                    }`}
+                  >
+                    ${payout.toFixed(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs">
+            📢 MARKETING BOOST
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <div className="p-2 border rounded bg-purple-50">
+              {(() => {
+                const totalStaff =
+                  workers.length + officeWorkers.length + supportStaff.length;
+                const baseCost = 5000;
+                const perStaffCost = 2000;
+                const totalCost = baseCost + totalStaff * perStaffCost;
+                const canAfford = cash >= totalCost;
+
+                return (
+                  <>
+                    <div className="text-xs text-gray-600 mb-2">
+                      Generate 3-5 immediate orders
+                    </div>
+                    <div className="text-sm font-bold mb-2">
+                      Cost: ${totalCost.toLocaleString()}
+                    </div>
+                    <button
+                      onClick={buyMarketingBoost}
+                      disabled={!canAfford}
+                      className={`w-full px-3 py-2 rounded text-sm font-medium ${
+                        canAfford
+                          ? "bg-purple-600 hover:bg-purple-700 text-white"
+                          : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                      }`}
+                    >
+                      📢 Buy Marketing Boost
+                    </button>
+                    <div className="text-xs text-gray-500 mt-1">
+                      Team size: {totalStaff} | Cost: $5k + $2k per staff
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -108,30 +208,70 @@ export function RightSidebar() {
               {pendingJobs.length}
             </div>
             <SidebarMenu>
-              {pendingJobs.slice(0, 3).map((job) => (
-                <SidebarMenuItem key={job.id}>
-                  <div className="w-full text-left p-2 border rounded hover:bg-gray-50">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium text-sm">
-                        {getJobTypeIcon(job.type)} {formatCurrency(job.payment)}
-                      </span>
-                      <span
-                        className={`text-xs px-1 py-0.5 rounded ${getUrgencyColor(
-                          job.urgency
-                        )}`}
-                      >
-                        {"🔥".repeat(job.urgency)}
-                      </span>
+              {pendingJobs.slice(0, 8).map((job) => {
+                const urgencyStatus = getJobUrgencyStatus(job);
+                const timeElapsedHours = urgencyStatus.timeElapsed; // Now in game hours
+
+                // Show elapsed game time in a simple format
+                const elapsedGameTime = Math.floor(timeElapsedHours);
+                const timeDisplay =
+                  elapsedGameTime === 0 ? "0s" : `${elapsedGameTime}s`;
+
+                const assignedWorker = workers.find(
+                  (w) => w.assignedJobId === job.id
+                );
+
+                return (
+                  <SidebarMenuItem key={job.id}>
+                    <div className="w-full text-left p-2 border rounded hover:bg-gray-50">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium text-sm">
+                          {getJobTypeIcon(job.type)}{" "}
+                          {formatCurrency(job.payment)}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <span
+                            className={`text-sm ${
+                              urgencyStatus.severity === "critical"
+                                ? "text-red-600"
+                                : urgencyStatus.severity === "warning"
+                                ? "text-orange-500"
+                                : "text-green-600"
+                            }`}
+                          >
+                            🕐
+                          </span>
+                          <span
+                            className={`text-xs font-mono ${
+                              urgencyStatus.isOverdue
+                                ? "text-red-600 font-bold"
+                                : urgencyStatus.severity === "warning"
+                                ? "text-orange-500"
+                                : "text-gray-600"
+                            }`}
+                          >
+                            {urgencyStatus.isOverdue ? "LATE!" : timeDisplay}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-600 truncate">
+                        {job.description}
+                      </div>
+                      <div className="text-xs mt-1">
+                        {assignedWorker ? (
+                          <span className="text-blue-600">
+                            👤 Assigned to {assignedWorker.name}
+                          </span>
+                        ) : (
+                          <span className="text-orange-500">
+                            ⚡ Unassigned - waiting for courier
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-600 truncate">
-                      {job.description}
-                    </div>
-                    <div className="text-xs text-blue-600 mt-1">
-                      ⚡ Auto-assigned
-                    </div>
-                  </div>
-                </SidebarMenuItem>
-              ))}
+                  </SidebarMenuItem>
+                );
+              })}
 
               {pendingJobs.length === 0 && (
                 <SidebarMenuItem>
@@ -140,15 +280,6 @@ export function RightSidebar() {
                   </div>
                 </SidebarMenuItem>
               )}
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={generateJob}
-                  className="w-full border-dashed border-2 border-blue-300 hover:border-blue-400 bg-blue-50 text-xs h-8"
-                >
-                  📢 Marketing Boost
-                </SidebarMenuButton>
-              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -213,6 +344,18 @@ export function RightSidebar() {
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs">🔧 DEBUG</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <button
+              onClick={instantAssignJobs}
+              className="w-full px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
+            >
+              🔧 Force Assign Jobs
+            </button>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
