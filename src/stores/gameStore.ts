@@ -14,6 +14,7 @@ interface GameStore extends GameState {
   // Actions
   hireWorker: () => void;
   hireOfficeWorker: () => void;
+  hireSupportWorker: () => void;
   generateJob: () => void;
   assignJob: (jobId: string, workerId: string) => void;
   selectWorker: (workerId: string) => void;
@@ -251,11 +252,26 @@ const initialState: GameState = {
     },
   ],
   officeWorkers: [
-    // Start with no office workers - first required after 5 couriers
+    {
+      id: "office-1",
+      name: "Morgan",
+      efficiency: 95,
+      adminCapacity: 10,
+      monthlySalary: 10000,
+      hiredAt: 0,
+      totalCost: 0,
+    },
+    {
+      id: "office-2",
+      name: "Taylor",
+      efficiency: 98,
+      adminCapacity: 10,
+      monthlySalary: 10000,
+      hiredAt: 0,
+      totalCost: 0,
+    },
   ],
-  supportStaff: [
-    // Start with no support staff - 1 required per 20 couriers
-  ],
+  supportStaff: [],
   jobs: [],
   customers: [],
   gameStartTime: Date.now(),
@@ -266,8 +282,8 @@ const initialState: GameState = {
   notifications: [
     generateNotification(
       "info",
-      "🚀 Welcome to Your Startup!",
-      "$400,000 seed funding secured! Build a profitable delivery platform. Track weekly burn rate - bankruptcy at $0 cash!"
+      "🍕 Welcome to FoodDash!",
+      "$400,000 seed funding secured! Build the fastest food delivery platform in the city. Your CEO & CTO are delivering orders while you scale. Track weekly burn rate - bankruptcy at $0 cash!"
     ),
   ],
   currentTime: 0, // Start at Hour 0 of Week 1
@@ -408,23 +424,69 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
   },
 
+  hireSupportWorker: () => {
+    const state = get();
+    const hiringCost = 5000; // $5k hiring cost (cheaper than office workers)
+
+    if (state.cash < hiringCost) {
+      toast.error("💸 Not enough cash to hire customer support!");
+      return;
+    }
+
+    const supportNames = [
+      "Jordan",
+      "Riley",
+      "Avery",
+      "Quinn",
+      "Drew",
+      "Sage",
+      "Blake",
+      "Rowan",
+    ];
+
+    const newSupportWorker = {
+      id: generateId(),
+      name: supportNames[state.supportStaff.length % supportNames.length],
+      supportCapacity: 20, // Supports 20 couriers each
+      monthlySalary: 2500, // $2.5k/month (less than office workers)
+      hiredAt: state.currentTime,
+      totalCost: 0,
+    };
+
+    set((state) => ({
+      ...state,
+      cash: state.cash - hiringCost,
+      supportStaff: [...state.supportStaff, newSupportWorker],
+    }));
+
+    toast.success(
+      `📞 ${newSupportWorker.name} joined customer support! (-$${hiringCost})`,
+      {
+        description: `Supports 20 couriers | $2.5k/month salary | Helps maintain reputation`,
+      }
+    );
+  },
+
   generateJob: () => {
-    const jobTypes: Job["type"][] = ["delivery", "rideshare", "labor"];
-    const type = jobTypes[Math.floor(Math.random() * jobTypes.length)];
+    const jobTypes: Job["type"][] = ["delivery"];
+    const type = "delivery"; // All jobs are food delivery
     const urgency = Math.floor(Math.random() * 3) + 1;
 
     const descriptions = {
       delivery: [
-        "🥡 Pizza Palace → Home",
-        "🍔 Burger Barn → Office",
-        "🥗 Salad Station → Apartment",
+        "🍕 Tony's Pizza → Apartment",
+        "🍔 Burger Express → Office Building",
+        "🥗 Fresh Salads → Home",
+        "🍜 Noodle House → University",
+        "🌮 Taco Fiesta → Business District",
+        "🍣 Sushi Zone → Residential",
+        "🍗 Chicken Palace → Hospital",
+        "🥪 Deli Corner → School",
+        "🍝 Pasta Central → Hotel",
+        "🍰 Sweet Treats → Apartment Complex",
+        "☕ Coffee Roasters → Office Tower",
+        "🥘 Curry Express → Shopping Mall",
       ],
-      rideshare: [
-        "🏠 Home → Airport",
-        "🏢 Office → Mall",
-        "🎭 Theater → Hotel",
-      ],
-      labor: ["📦 Moving boxes", "🔧 Furniture assembly", "🧹 Office cleaning"],
     };
 
     const pickup = generateRandomBuildingPosition();
@@ -594,7 +656,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     ).length;
 
     // Moderate job generation - create some pressure but not overwhelming
-    // Generate 1-2 jobs every 10-20 seconds 
+    // Generate 1-2 jobs every 10-20 seconds
     const baseJobInterval = Math.max(10000, 20000 - onlineCouriers * 1000);
     const jobGenerationInterval = baseJobInterval / demandMultiplier;
 
@@ -1251,9 +1313,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   getJobUrgencyStatus: (job) => {
     const state = get();
     const currentGameTime = state.currentTime;
-    const jobAge = currentGameTime - job.timeCreated; // Both in game time units
-    const maxWaitTime =
-      job.urgency === 3 ? 8 : job.urgency === 2 ? 9 : 10; // 8/9/10 game time units (hours)
+    const jobAge = Math.max(0, currentGameTime - job.timeCreated); // Ensure non-negative
+    const maxWaitTime = 10; // 10 minutes for all jobs
     const timeElapsed = jobAge;
     const isOverdue = jobAge > maxWaitTime;
 
@@ -1356,12 +1417,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   instantAssignJobs: () => {
     const state = get();
-    
+
     // Simple check: find workers that are not working
     const availableWorkers = state.workers.filter(
       (w) => !w.isWorking && !w.assignedJobId
     );
-    
+
     // Find jobs that need assignment
     const pendingJobs = state.jobs.filter((j) => j.status === "pending");
 
@@ -1370,16 +1431,27 @@ export const useGameStore = create<GameStore>((set, get) => ({
     console.log(`- Available workers: ${availableWorkers.length}`);
     console.log(`- Pending jobs: ${pendingJobs.length}`);
     
+    // Debug all workers
+    state.workers.forEach((w, i) => {
+      console.log(`  Worker ${i}: ${w.name} - isWorking=${w.isWorking}, assignedJobId=${w.assignedJobId}, isOnline=${w.isOnline}, isSick=${w.isSick}`);
+    });
+
     if (availableWorkers.length > 0) {
-      availableWorkers.forEach(w => {
-        console.log(`  ✅ Available: ${w.name} (working=${w.isWorking}, assigned=${w.assignedJobId})`);
+      availableWorkers.forEach((w) => {
+        console.log(
+          `  ✅ Available: ${w.name} (working=${w.isWorking}, assigned=${w.assignedJobId})`
+        );
       });
     }
-    
+
     if (state.workers.length > availableWorkers.length) {
-      state.workers.filter(w => w.isWorking || w.assignedJobId).forEach(w => {
-        console.log(`  ❌ Busy: ${w.name} (working=${w.isWorking}, assigned=${w.assignedJobId})`);
-      });
+      state.workers
+        .filter((w) => w.isWorking || w.assignedJobId)
+        .forEach((w) => {
+          console.log(
+            `  ❌ Busy: ${w.name} (working=${w.isWorking}, assigned=${w.assignedJobId})`
+          );
+        });
     }
 
     if (availableWorkers.length === 0 || pendingJobs.length === 0) {
@@ -1448,35 +1520,41 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   buyMarketingBoost: () => {
     const state = get();
-    const totalStaff = state.workers.length + state.officeWorkers.length + state.supportStaff.length;
-    
+    const totalStaff =
+      state.workers.length +
+      state.officeWorkers.length +
+      state.supportStaff.length;
+
     // Cost scales aggressively with team size: $5k base + $2k per staff member
     const baseCost = 5000;
     const perStaffCost = 2000;
-    const totalCost = baseCost + (totalStaff * perStaffCost);
-    
+    const totalCost = baseCost + totalStaff * perStaffCost;
+
     if (state.cash < totalCost) {
       toast.error(`💸 Not enough cash! Need $${totalCost.toLocaleString()}`, {
         description: `You have $${state.cash.toLocaleString()}`,
       });
       return;
     }
-    
+
     // Deduct cost and generate 3-5 immediate jobs
     const jobsToGenerate = Math.floor(Math.random() * 3) + 3; // 3-5 jobs
-    
+
     set((state) => ({
       ...state,
       cash: state.cash - totalCost,
     }));
-    
+
     // Generate the marketing boost jobs
     for (let i = 0; i < jobsToGenerate; i++) {
       get().generateJob();
     }
-    
-    toast.success(`📢 Marketing boost purchased! Generated ${jobsToGenerate} orders`, {
-      description: `Cost: $${totalCost.toLocaleString()} | Team size: ${totalStaff}`,
-    });
+
+    toast.success(
+      `📢 Marketing boost purchased! Generated ${jobsToGenerate} orders`,
+      {
+        description: `Cost: $${totalCost.toLocaleString()} | Team size: ${totalStaff}`,
+      }
+    );
   },
 }));

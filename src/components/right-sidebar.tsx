@@ -24,7 +24,6 @@ export function RightSidebar() {
     adjustCourierPayout,
     getJobUrgencyStatus,
     buyMarketingBoost,
-    instantAssignJobs,
     officeWorkers,
     supportStaff,
     currentTime,
@@ -46,17 +45,12 @@ export function RightSidebar() {
     return (hours >= 11 && hours < 14) || (hours >= 17 && hours < 21);
   };
 
-  const getJobTypeIcon = (type: Job["type"]) => {
-    switch (type) {
-      case "delivery":
-        return "🚚";
-      case "rideshare":
-        return "🚗";
-      case "labor":
-        return "🔨";
-      default:
-        return "💼";
-    }
+  const getJobTypeIcon = (job: Job) => {
+    // All jobs are food delivery now - use job ID to get consistent icon
+    const foodIcons = ["🍕", "🍔", "🥗", "🍜", "🌮", "🍣", "🍗", "🥪", "🍝", "🍰", "☕", "🥘"];
+    // Use job ID to get consistent hash for this job
+    const hash = job.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+    return foodIcons[hash % foodIcons.length];
   };
 
   const getUrgencyColor = (urgency: number) => {
@@ -212,10 +206,10 @@ export function RightSidebar() {
                 const urgencyStatus = getJobUrgencyStatus(job);
                 const timeElapsedHours = urgencyStatus.timeElapsed; // Now in game hours
 
-                // Show elapsed game time in a simple format
-                const elapsedGameTime = Math.floor(timeElapsedHours);
+                // Show elapsed time counting up to 10 minutes
+                const elapsedMinutes = Math.floor(timeElapsedHours);
                 const timeDisplay =
-                  elapsedGameTime === 0 ? "0s" : `${elapsedGameTime}s`;
+                  elapsedMinutes === 0 ? "0m" : `${elapsedMinutes}m`;
 
                 const assignedWorker = workers.find(
                   (w) => w.assignedJobId === job.id
@@ -226,7 +220,7 @@ export function RightSidebar() {
                     <div className="w-full text-left p-2 border rounded hover:bg-gray-50">
                       <div className="flex items-center justify-between mb-1">
                         <span className="font-medium text-sm">
-                          {getJobTypeIcon(job.type)}{" "}
+                          {getJobTypeIcon(job)}{" "}
                           {formatCurrency(job.payment)}
                         </span>
                         <div className="flex items-center gap-1">
@@ -299,7 +293,7 @@ export function RightSidebar() {
                     <div className="p-2 border rounded bg-blue-50">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">
-                          {getJobTypeIcon(job.type)}{" "}
+                          {getJobTypeIcon(job)}{" "}
                           {formatCurrency(job.payment)}
                         </span>
                         <span className="text-xs text-blue-600">
@@ -323,7 +317,7 @@ export function RightSidebar() {
                   <div className="p-2 border rounded bg-green-50">
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium">
-                        {getJobTypeIcon(job.type)} {formatCurrency(job.payment)}
+                        {getJobTypeIcon(job)} {formatCurrency(job.payment)}
                       </span>
                       <span className="text-sm">
                         {"⭐".repeat(job.customerRating || 0)}
@@ -344,18 +338,6 @@ export function RightSidebar() {
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-xs">🔧 DEBUG</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <button
-              onClick={instantAssignJobs}
-              className="w-full px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs"
-            >
-              🔧 Force Assign Jobs
-            </button>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

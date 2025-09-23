@@ -21,6 +21,7 @@ export function AppSidebar() {
     supportStaff,
     hireWorker,
     hireOfficeWorker,
+    hireSupportWorker,
     currentTime,
   } = useGameStore();
 
@@ -98,50 +99,60 @@ export function AppSidebar() {
                 </span>
               </div>
 
-              {/* Monthly Expenses Section */}
+              {/* Weekly Expenses Section */}
               <div className="pt-2 border-t border-gray-200">
                 <div className="text-xs font-semibold text-gray-700 mb-2">
-                  📊 MONTHLY EXPENSES
+                  📊 WEEKLY EXPENSES
                 </div>
                 <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span>👥 Office Workers:</span>
                     <span className="text-red-600">
-                      -${(officeWorkers.length * 10000).toLocaleString()}
+                      -$
+                      {Math.floor(
+                        (officeWorkers.length * 10000) / 4
+                      ).toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>📞 Support Staff:</span>
                     <span className="text-red-600">
-                      -${(supportStaff.length * 2500).toLocaleString()}
+                      -$
+                      {Math.floor(
+                        (supportStaff.length * 2500) / 4
+                      ).toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>🏢 Rent & Legal:</span>
                     <span className="text-red-600">
                       -$
-                      {(
-                        20000 +
-                        workers.length * 1000 +
-                        officeWorkers.length * 2000
+                      {Math.floor(
+                        (20000 +
+                          workers.length * 1000 +
+                          officeWorkers.length * 2000) /
+                          4
                       ).toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>☁️ Cloud/Infrastructure:</span>
-                    <span className="text-red-600">-$5,000+</span>
+                    <span className="text-red-600">
+                      -${Math.floor(5000 / 4).toLocaleString()}+
+                    </span>
                   </div>
                   <div className="flex justify-between border-t border-gray-300 pt-1 font-semibold">
-                    <span>💸 Total/Month:</span>
+                    <span>💸 Total/Week:</span>
                     <span className="text-red-600">
                       -$
-                      {(
-                        officeWorkers.length * 10000 +
-                        supportStaff.length * 2500 +
-                        (20000 +
-                          workers.length * 1000 +
-                          officeWorkers.length * 2000) +
-                        5000
+                      {Math.floor(
+                        (officeWorkers.length * 10000 +
+                          supportStaff.length * 2500 +
+                          (20000 +
+                            workers.length * 1000 +
+                            officeWorkers.length * 2000) +
+                          5000) /
+                          4
                       ).toLocaleString()}
                     </span>
                   </div>
@@ -250,7 +261,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {officeWorkers.map((worker) => (
+              {officeWorkers.map((worker, index) => (
                 <SidebarMenuItem key={worker.id}>
                   <div className="w-full p-2 border rounded-lg hover:bg-accent bg-orange-50">
                     <div className="p-2 rounded">
@@ -258,7 +269,7 @@ export function AppSidebar() {
                         <span className="text-lg">🏢</span>
                         <span className="font-medium">{worker.name}</span>
                         <span className="text-xs bg-orange-100 text-orange-800 px-1 rounded">
-                          ADMIN
+                          {index === 0 ? "CEO" : index === 1 ? "CTO" : "ADMIN"}
                         </span>
                       </div>
 
@@ -294,6 +305,58 @@ export function AppSidebar() {
                   disabled={cash < 5000}
                 >
                   <span>+ Hire Office Worker (€5k-10k)</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>
+            CONTRACTORS ({supportStaff.length})
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {supportStaff.map((worker) => (
+                <SidebarMenuItem key={worker.id}>
+                  <div className="w-full p-2 border rounded-lg hover:bg-accent bg-purple-50">
+                    <div className="p-2 rounded">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-lg">📞</span>
+                        <span className="font-medium">{worker.name}</span>
+                        <span className="text-xs bg-purple-100 text-purple-800 px-1 rounded">
+                          SUPPORT
+                        </span>
+                      </div>
+
+                      <div className="text-xs space-y-1">
+                        <div className="flex justify-between">
+                          <span>👥 Capacity:</span>
+                          <span>{worker.supportCapacity} couriers</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>💰 Salary:</span>
+                          <span>
+                            ${worker.monthlySalary.toLocaleString()}/month
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>📈 Total Cost:</span>
+                          <span>{formatCurrency(worker.totalCost)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </SidebarMenuItem>
+              ))}
+
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={hireSupportWorker}
+                  className="w-full border-dashed border-2 border-purple-300 hover:border-purple-400 bg-purple-50"
+                  disabled={cash < 5000}
+                >
+                  <span>+ Hire Customer Support ($5k)</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
