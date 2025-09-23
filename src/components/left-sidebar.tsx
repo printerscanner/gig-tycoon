@@ -73,7 +73,9 @@ export function AppSidebar() {
               </div>
               <div className="flex justify-between">
                 <span>📅 Days in Business:</span>
-                <span className="font-bold text-blue-600">Day {daysInBusiness}</span>
+                <span className="font-bold text-blue-600">
+                  Day {daysInBusiness}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>💰 Cash:</span>
