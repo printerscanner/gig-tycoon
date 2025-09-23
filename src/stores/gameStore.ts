@@ -174,14 +174,16 @@ const getPriceMultiplier = (gameHours: number) => {
 
 // Calculate maximum courier capacity based on office workers
 const calculateMaxCourierCapacity = (officeWorkers: OfficeWorker[]) => {
-  if (officeWorkers.length === 0) {
-    return 10; // Can hire up to 10 couriers without office workers
-  }
+  // Base capacity is 5 couriers (2 CEO/CTO already hired + 3 more slots)
+  const baseCapacity = 5;
 
-  return (
-    10 +
-    officeWorkers.reduce((total, worker) => total + worker.adminCapacity, 0)
+  // Add capacity from office workers (CEO/CTO have 0 capacity, new hires add 5 each)
+  const additionalCapacity = officeWorkers.reduce(
+    (total, worker) => total + worker.adminCapacity,
+    0
   );
+
+  return baseCapacity + additionalCapacity;
 };
 
 // Calculate hourly costs for office workers
@@ -204,7 +206,7 @@ const generateNotification = (
 
 const initialState: GameState = {
   cash: 400000, // Starting with $400k seed funding
-  reputation: 85,
+  reputation: 50, // Start at 50/100 to create pressure
   workerMorale: 75,
   completedJobs: 0,
   platformCommission: 20, // Platform takes 20% commission (10-30% range)
@@ -227,6 +229,7 @@ const initialState: GameState = {
       isSick: false,
       mood: 75,
       lastMoodCheck: 0,
+      totalHoursWorked: 0,
     },
     {
       id: "worker-2",
@@ -249,6 +252,7 @@ const initialState: GameState = {
       isSick: false,
       mood: 80,
       lastMoodCheck: 0,
+      totalHoursWorked: 0,
     },
   ],
   officeWorkers: [
@@ -256,7 +260,7 @@ const initialState: GameState = {
       id: "office-1",
       name: "Morgan",
       efficiency: 95,
-      adminCapacity: 10,
+      adminCapacity: 0, // CEO doesn't add capacity - is operational founder
       monthlySalary: 10000,
       hiredAt: 0,
       totalCost: 0,
@@ -265,7 +269,7 @@ const initialState: GameState = {
       id: "office-2",
       name: "Taylor",
       efficiency: 98,
-      adminCapacity: 10,
+      adminCapacity: 0, // CTO doesn't add capacity - is operational founder
       monthlySalary: 10000,
       hiredAt: 0,
       totalCost: 0,
@@ -276,6 +280,7 @@ const initialState: GameState = {
   customers: [],
   gameStartTime: Date.now(),
   currentWeek: 1,
+  daysInBusiness: 1, // Start on day 1
   gameSpeed: 1,
   investorFunding: 0,
   weeklyTarget: 100, // Target: 100 deliveries per week
@@ -311,7 +316,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       return;
     }
 
-    const maxCapacity = 5 + state.officeWorkers.length * 10; // 5 base + 10 per office worker
+    const maxCapacity = calculateMaxCourierCapacity(state.officeWorkers);
 
     if (state.workers.length >= maxCapacity) {
       toast.error("🏢 Capacity reached! Hire more office workers to expand.", {
@@ -352,6 +357,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       isSick: false,
       mood: Math.floor(Math.random() * 20) + 70, // 70-90 mood
       lastMoodCheck: state.currentTime,
+      totalHoursWorked: 0,
     };
 
     const costMessage = `(-€${hiringCost})`;
@@ -394,18 +400,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
         state.officeWorkers.length % OFFICE_WORKER_NAMES.length
       ],
       efficiency: Math.floor(Math.random() * 20) + 80, // 80-100 efficiency
-      adminCapacity: 10, // Always 10 couriers each
+      adminCapacity: 5, // New office workers add 5 courier capacity each
       monthlySalary: 10000, // $10k/month salary
       hiredAt: state.currentTime,
       totalCost: 0,
     };
 
-    const newMaxCapacity = 5 + (state.officeWorkers.length + 1) * 10;
+    const newMaxCapacity = calculateMaxCourierCapacity([
+      ...state.officeWorkers,
+      newOfficeWorker,
+    ]);
 
     toast.success(
       `🏢 ${newOfficeWorker.name} joined your office! (-$${hiringCost})`,
       {
-        description: `Supports 10 couriers | $10k/month salary | New capacity: ${newMaxCapacity}`,
+        description: `Adds 5 courier capacity | $10k/month salary | New capacity: ${newMaxCapacity}`,
       }
     );
 
@@ -643,9 +652,67 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const now = Date.now();
     const currentState = get();
 
-    // Update game time (slower progression - 1 real second = 0.1 game hours = 6 game minutes)
-    const timeIncrement = 0.1; // 0.1 game hours per update (6 game minutes)
+    // Update game time (slower progression - 1 real second = 0.05 game hours = 3 game minutes)
+    const timeIncrement = 0.05; // 0.05 game hours per update (3 game minutes)
     const newTime = (currentState.currentTime + timeIncrement) % 168; // Wrap around at 168 hours (1 week)
+
+    // Check if we need to deduct weekly expenses (every 24 hours = 1 day)
+    const currentDay = Math.floor(currentState.currentTime / 24);
+    const newDay = Math.floor(newTime / 24);
+    const hasNewDayStarted =
+      newDay !== currentDay || (currentState.currentTime === 0 && newTime > 0);
+
+    if (hasNewDayStarted) {
+      // Calculate daily expenses (weekly expenses / 7)
+      const officeWorkerCost = Math.floor(
+        (currentState.officeWorkers.length * 10000) / 4 / 7
+      ); // Monthly to daily
+      const supportStaffCost = Math.floor(
+        (currentState.supportStaff.length * 2500) / 4 / 7
+      ); // Monthly to daily
+      const rentAndLegalCost = Math.floor(
+        (20000 +
+          currentState.workers.length * 1000 +
+          currentState.officeWorkers.length * 2000) /
+          4 /
+          7
+      );
+      const cloudCost = Math.floor(5000 / 4 / 7); // Base cloud cost daily
+
+      const totalDailyExpenses =
+        officeWorkerCost + supportStaffCost + rentAndLegalCost + cloudCost;
+
+      if (totalDailyExpenses > 0) {
+        set((state) => ({
+          ...state,
+          cash: state.cash - totalDailyExpenses,
+          weeklyExpenses: state.weeklyExpenses + totalDailyExpenses,
+          daysInBusiness: state.daysInBusiness + 1, // Increment days in business
+        }));
+
+        // Show notification for significant expense days
+        if (totalDailyExpenses > 1000) {
+          toast.info(
+            `💸 Daily expenses: -$${totalDailyExpenses.toLocaleString()}`,
+            {
+              description: `Staff salaries, rent & operational costs deducted`,
+            }
+          );
+        }
+
+        // Show warning if cash is getting low
+        const newCash = currentState.cash - totalDailyExpenses;
+        if (newCash < 50000 && newCash > 0) {
+          toast.warning(`⚠️ Cash running low: $${newCash.toLocaleString()}`, {
+            description: "Consider reducing expenses or increasing revenue",
+          });
+        } else if (newCash <= 0) {
+          toast.error(`💀 BANKRUPTCY! Cash: $${newCash.toLocaleString()}`, {
+            description: "Game Over - you've run out of money!",
+          });
+        }
+      }
+    }
 
     // Handle job generation with demand multiplier
     const timeSinceLastJob = now - currentState.lastJobGeneration;
@@ -706,13 +773,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
     });
 
     if (verySlowJobs.length > 0) {
-      // Apply small reputation penalty for delayed jobs
-      const reputationPenalty = verySlowJobs.length * 0.5; // -0.5 reputation per slow job every 5s
+      // Apply strong reputation penalty for late orders - this should motivate hiring more couriers!
+      const reputationPenalty = verySlowJobs.length * 2.0; // -2.0 reputation per late order every 500ms
 
       set((state) => ({
         ...state,
         reputation: Math.max(0, state.reputation - reputationPenalty),
       }));
+
+      // Show warning when reputation is dropping fast
+      if (verySlowJobs.length >= 3) {
+        toast.error(
+          `📉 Reputation dropping! ${verySlowJobs.length} late orders`,
+          {
+            description:
+              "Hire more couriers to handle demand and maintain reputation",
+          }
+        );
+      }
     }
 
     // Update time in state and handle wage payments
@@ -847,6 +925,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
               sickUntil: newSickUntil,
               mood: newMood,
               lastMoodCheck: state.currentTime,
+              totalHoursWorked:
+                worker.totalHoursWorked +
+                (shouldBeOnline && !newIsSick ? timeIncrement : 0),
             };
           }
 
@@ -854,6 +935,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
             ...worker,
             isOnline: shouldBeOnline && !isStillSick,
             isSick: isStillSick,
+            totalHoursWorked:
+              worker.totalHoursWorked +
+              (shouldBeOnline && !isStillSick ? timeIncrement : 0),
           };
         })
         .filter((worker) => worker !== null); // Remove workers who quit
@@ -1245,18 +1329,33 @@ export const useGameStore = create<GameStore>((set, get) => ({
               }, 0)
           : 0;
 
-      // Calculate new reputation from recent ratings
+      // Calculate new reputation from recent ratings (slow growth, fast decline)
       const recentRatings = updatedJobs
         .filter((job) => job.customerRating)
-        .slice(-10)
+        .slice(-20) // Look at more recent jobs for smoother calculation
         .map((job) => job.customerRating!);
 
-      const newReputation =
-        recentRatings.length > 0
-          ? (recentRatings.reduce((sum, rating) => sum + rating, 0) /
-              recentRatings.length) *
-            20
-          : state.reputation;
+      let newReputation = state.reputation;
+      if (recentRatings.length > 0) {
+        const averageRating =
+          recentRatings.reduce((sum, rating) => sum + rating, 0) /
+          recentRatings.length;
+        const targetReputation = averageRating * 20; // 5-star rating = 100 reputation
+
+        // Slow reputation recovery: only move 10% toward target each cycle
+        const reputationChange = (targetReputation - state.reputation) * 0.1;
+
+        // Cap positive changes to +0.5 per cycle (slow growth)
+        const cappedChange =
+          reputationChange > 0
+            ? Math.min(reputationChange, 0.5)
+            : reputationChange; // No cap on negative changes
+
+        newReputation = Math.max(
+          0,
+          Math.min(100, state.reputation + cappedChange)
+        );
+      }
 
       // Calculate worker morale
       const newWorkerMorale =

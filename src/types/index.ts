@@ -19,6 +19,7 @@ export interface Worker {
   sickUntil?: number; // Game time when worker recovers from sickness
   mood: number; // 0-100, affects tips and likelihood to quit/get sick
   lastMoodCheck: number; // Last time mood was evaluated
+  totalHoursWorked: number; // Track total hours worked for this worker
 }
 
 export interface WorkerTrait {
@@ -82,6 +83,7 @@ export interface GameState {
   selectedWorkerId?: string;
   gameStartTime: number;
   currentWeek: number; // Track weeks instead of days
+  daysInBusiness: number; // Track total days the company has been operating
   gameSpeed: number;
   investorFunding: number;
   weeklyTarget: number;

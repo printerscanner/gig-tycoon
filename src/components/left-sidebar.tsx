@@ -23,17 +23,23 @@ export function AppSidebar() {
     hireOfficeWorker,
     hireSupportWorker,
     currentTime,
+    daysInBusiness,
   } = useGameStore();
 
   const formatCurrency = (amount: number) => `€${amount.toFixed(0)}`;
 
   // Calculate max capacity based on office workers
   const calculateMaxCapacity = () => {
-    if (officeWorkers.length === 0) return 10;
-    return (
-      10 +
-      officeWorkers.reduce((total, worker) => total + worker.adminCapacity, 0)
+    // Base capacity is 5 couriers (2 CEO/CTO already hired + 3 more slots)
+    const baseCapacity = 5;
+
+    // Add capacity from office workers (CEO/CTO have 0 capacity, new hires add 5 each)
+    const additionalCapacity = officeWorkers.reduce(
+      (total, worker) => total + worker.adminCapacity,
+      0
     );
+
+    return baseCapacity + additionalCapacity;
   };
 
   const formatGameTime = (gameHours: number) => {
@@ -64,6 +70,10 @@ export function AppSidebar() {
               <div className="flex justify-between">
                 <span>🕐 Time:</span>
                 <span className="font-bold">{formatGameTime(currentTime)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>📅 Days in Business:</span>
+                <span className="font-bold text-blue-600">Day {daysInBusiness}</span>
               </div>
               <div className="flex justify-between">
                 <span>💰 Cash:</span>
@@ -103,57 +113,51 @@ export function AppSidebar() {
               {/* Weekly Expenses Section */}
               <div className="pt-2 border-t border-gray-200">
                 <div className="text-xs font-semibold text-gray-700 mb-2">
-                  📊 WEEKLY EXPENSES
+                  📊 MONTHLY EXPENSES
                 </div>
                 <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span>👥 Office Workers:</span>
                     <span className="text-red-600">
                       -$
-                      {Math.floor(
-                        (officeWorkers.length * 10000) / 4
-                      ).toLocaleString()}
+                      {(officeWorkers.length * 10000).toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>📞 Support Staff:</span>
                     <span className="text-red-600">
                       -$
-                      {Math.floor(
-                        (supportStaff.length * 2500) / 4
-                      ).toLocaleString()}
+                      {(supportStaff.length * 2500).toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>🏢 Rent & Legal:</span>
                     <span className="text-red-600">
                       -$
-                      {Math.floor(
-                        (20000 +
-                          workers.length * 1000 +
-                          officeWorkers.length * 2000) /
-                          4
+                      {(
+                        20000 +
+                        workers.length * 1000 +
+                        officeWorkers.length * 2000
                       ).toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>☁️ Cloud/Infrastructure:</span>
                     <span className="text-red-600">
-                      -${Math.floor(5000 / 4).toLocaleString()}+
+                      -${(5000).toLocaleString()}+
                     </span>
                   </div>
                   <div className="flex justify-between border-t border-gray-300 pt-1 font-semibold">
-                    <span>💸 Total/Week:</span>
+                    <span>💸 Total/Month:</span>
                     <span className="text-red-600">
                       -$
-                      {Math.floor(
-                        (officeWorkers.length * 10000 +
-                          supportStaff.length * 2500 +
-                          (20000 +
-                            workers.length * 1000 +
-                            officeWorkers.length * 2000) +
-                          5000) /
-                          4
+                      {(
+                        officeWorkers.length * 10000 +
+                        supportStaff.length * 2500 +
+                        (20000 +
+                          workers.length * 1000 +
+                          officeWorkers.length * 2000) +
+                        5000
                       ).toLocaleString()}
                     </span>
                   </div>
@@ -230,6 +234,12 @@ export function AppSidebar() {
                           <span>
                             {worker.jobsCompleted} |{" "}
                             {formatCurrency(worker.totalEarned)} earned
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>⏰ Hours:</span>
+                          <span>
+                            {worker.totalHoursWorked?.toFixed(1) || 0}h worked
                           </span>
                         </div>
                         <div className="text-xs text-gray-500">
