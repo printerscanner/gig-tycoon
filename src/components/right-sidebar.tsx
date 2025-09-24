@@ -5,7 +5,6 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarMenu,
-  SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useGameStore } from "@/stores/gameStore";
@@ -17,7 +16,6 @@ export function RightSidebar() {
   const {
     jobs,
     workers,
-    generateJob,
     platformCommission,
     adjustPlatformCommission,
     courierPayout,
@@ -26,24 +24,10 @@ export function RightSidebar() {
     buyMarketingBoost,
     officeWorkers,
     supportStaff,
-    currentTime,
     cash,
   } = store;
 
   const formatCurrency = (amount: number) => `€${amount.toFixed(2)}`;
-
-  const formatGameTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60) % 24;
-    const mins = minutes % 60;
-    const ampm = hours >= 12 ? "PM" : "AM";
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${mins.toString().padStart(2, "0")} ${ampm}`;
-  };
-
-  const isDemandHigh = (minutes: number) => {
-    const hours = Math.floor(minutes / 60) % 24;
-    return (hours >= 11 && hours < 14) || (hours >= 17 && hours < 21);
-  };
 
   const getJobTypeIcon = (job: Job) => {
     // All jobs are food delivery now - use job ID to get consistent icon
@@ -66,18 +50,7 @@ export function RightSidebar() {
     return foodIcons[hash % foodIcons.length];
   };
 
-  const getUrgencyColor = (urgency: number) => {
-    switch (urgency) {
-      case 3:
-        return "text-red-600 bg-red-50";
-      case 2:
-        return "text-yellow-600 bg-yellow-50";
-      case 1:
-        return "text-green-600 bg-green-50";
-      default:
-        return "text-gray-600 bg-gray-50";
-    }
-  };
+  // (UI helper colors not needed for current design)
 
   const activeJobs = jobs.filter(
     (job) => job.status === "pending" || job.status === "assigned"
@@ -118,14 +91,6 @@ export function RightSidebar() {
           color: "text-blue-600",
         };
       } else {
-        // Check if closer to pickup or dropoff to determine phase
-        const distanceToPickup =
-          Math.abs(worker.position.row - job.pickup.row) +
-          Math.abs(worker.position.col - job.pickup.col);
-        const distanceToDropoff =
-          Math.abs(worker.position.row - job.dropoff.row) +
-          Math.abs(worker.position.col - job.dropoff.col);
-
         if (
           worker.targetPosition &&
           worker.targetPosition.row === job.pickup.row &&

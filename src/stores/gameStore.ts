@@ -4,7 +4,6 @@ import type {
   GameState,
   Worker,
   OfficeWorker,
-  SupportWorker,
   Job,
   Notification,
   WorkerTrait,
@@ -122,20 +121,7 @@ const generateRandomBuildingPosition = () => {
 
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
-// Time helper functions
-const formatGameTime = (minutes: number) => {
-  const hours = Math.floor(minutes / 60) % 24;
-  const mins = minutes % 60;
-  const ampm = hours >= 12 ? "PM" : "AM";
-  const displayHours = hours % 12 || 12;
-  return `${displayHours}:${mins.toString().padStart(2, "0")} ${ampm}`;
-};
-
-// Check if current time is during peak hours (lunch: 11-14, dinner: 17-21)
-const isPeakHours = (minutes: number) => {
-  const hours = Math.floor(minutes / 60) % 24;
-  return (hours >= 11 && hours < 14) || (hours >= 17 && hours < 21);
-};
+// (Removed unused time helpers)
 
 // Get demand multiplier based on time of day
 const getDemandMultiplier = (gameHours: number) => {
@@ -186,9 +172,13 @@ const calculateMaxCourierCapacity = (officeWorkers: OfficeWorker[]) => {
   return baseCapacity + additionalCapacity;
 };
 
-// Calculate hourly costs for office workers
+// Calculate hourly costs for office workers based on monthly salary (~160 hours/month)
 const calculateHourlyOfficeWages = (officeWorkers: OfficeWorker[]) => {
-  return officeWorkers.reduce((total, worker) => total + worker.hourlyWage, 0);
+  const hoursPerMonth = 160;
+  return officeWorkers.reduce(
+    (total, worker) => total + worker.monthlySalary / hoursPerMonth,
+    0
+  );
 };
 
 const generateNotification = (
@@ -296,6 +286,7 @@ const initialState: GameState = {
   lastExpensePayment: 0, // Start expense tracking
   weeklyRevenue: 0,
   weeklyExpenses: 0,
+  lastWagePayment: 0,
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
@@ -477,7 +468,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   generateJob: () => {
-    const jobTypes: Job["type"][] = ["delivery"];
     const type = "delivery"; // All jobs are food delivery
     const urgency = Math.floor(Math.random() * 3) + 1;
 
@@ -723,10 +713,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
       (w) => w.isOnline && !w.isSick
     ).length;
 
-    // Moderate job generation - create some pressure but not overwhelming
-    // Generate 1-2 jobs every 10-20 seconds
-    const baseJobInterval = Math.max(10000, 20000 - onlineCouriers * 1000);
-    const jobGenerationInterval = baseJobInterval / demandMultiplier;
+    // Moderate job generation - ensure it doesn't stall overnight
+    // Generate 1-2 jobs every ~5-15 seconds, faster with more couriers
+    const effectiveDemand = Math.max(0.6, demandMultiplier); // never below 0.6
+    const baseJobInterval = Math.max(5000, 15000 - onlineCouriers * 1000);
+    const jobGenerationInterval = baseJobInterval / effectiveDemand;
 
     if (timeSinceLastJob > jobGenerationInterval) {
       // Generate fewer jobs - should create manageable pressure
@@ -752,6 +743,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
         lastJobGeneration: now,
         currentTime: newTime,
       }));
+    } else {
+      // Safety: if there are no active jobs for a while, create one
+      const activeJobsCount = currentState.jobs.filter(
+        (j) => j.status === "pending" || j.status === "assigned"
+      ).length;
+      if (activeJobsCount === 0 && timeSinceLastJob > 6000) {
+        get().generateJob();
+        get().instantAssignJobs();
+        set((state) => ({
+          ...state,
+          lastJobGeneration: now,
+          currentTime: newTime,
+        }));
+        console.log("🧯 Safety: generated 1 job due to inactivity");
+      }
     }
 
     // Check for slow jobs and apply reputation penalties (but don't remove jobs)
@@ -811,10 +817,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
         newLastWagePayment = newTime;
 
         // Update office workers' total costs
+        const hoursPerMonth = 160;
         const updatedOfficeWorkers = state.officeWorkers.map((worker) => ({
           ...worker,
           totalCost:
-            worker.totalCost + worker.hourlyWage * hoursSinceLastPayment,
+            worker.totalCost +
+            (worker.monthlySalary / hoursPerMonth) * hoursSinceLastPayment,
         }));
 
         if (totalWages > 0) {
@@ -833,7 +841,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
 
         return {
-          ...state,
           currentTime: newTime,
           cash: newCash,
           lastWagePayment: newLastWagePayment,
@@ -841,7 +848,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         };
       }
 
-      return { ...state, currentTime: newTime };
+      return { currentTime: newTime };
     });
 
     // Auto-assignment logic (every 3 seconds)
@@ -875,10 +882,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
           }
 
           // Check if worker recovers from sickness
-          const isStillSick =
+          const isStillSick = !!(
             worker.isSick &&
-            worker.sickUntil &&
-            state.currentTime < worker.sickUntil;
+            worker.sickUntil !== undefined &&
+            state.currentTime < worker.sickUntil
+          );
 
           // Random sickness check (once per game hour, only if online and not already sick)
           const timeSinceLastMoodCheck =
@@ -1241,8 +1249,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
           if (Math.random() < finalTipChance) {
             // Tip amount based on performance score (€0.5 - €5.0)
             const maxTip = 5.0;
-            const performanceMultiplier = performanceScore / 100; // 0-1 based on performance
-
             if (performanceScore >= 85) {
               tipAmount = Math.random() * 1.5 + 3.5; // €3.5-5.0 for excellent performance
             } else if (performanceScore >= 70) {

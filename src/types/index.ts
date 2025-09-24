@@ -93,6 +93,7 @@ export interface GameState {
   lastExpensePayment: number; // Last time weekly expenses were paid
   weeklyRevenue: number; // Track weekly revenue
   weeklyExpenses: number; // Track weekly expenses
+  lastWagePayment: number; // Last time office wages were paid (game hours)
 }
 
 export interface Notification {
