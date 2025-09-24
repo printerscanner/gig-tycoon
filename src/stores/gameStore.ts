@@ -281,7 +281,7 @@ const initialState: GameState = {
       "$400,000 seed funding secured! Build the fastest food delivery platform in the city. Your CEO & CTO are delivering orders while you scale. Track weekly burn rate - bankruptcy at $0 cash!"
     ),
   ],
-  currentTime: 0, // Start at Hour 0 of Week 1
+  currentTime: 12, // Start mid-day so workers are online and jobs get assigned immediately
   gameTimeMultiplier: 10, // Faster game clock
   lastExpensePayment: 0, // Start expense tracking
   weeklyRevenue: 0,
@@ -525,7 +525,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       pickup,
       dropoff,
       payment,
-      timeCreated: currentState.currentTime, // Use game time instead of real time
+      // Use real time for creation so all SLA/assignment checks compare in milliseconds consistently
+      timeCreated: Date.now(),
       status: "pending",
       description:
         descriptions[type][
@@ -1409,6 +1410,16 @@ export const useGameStore = create<GameStore>((set, get) => ({
         notifications: newNotifications,
       };
     });
+
+    // Final safety: always try to assign if we have both pending jobs and available workers
+    const s = get();
+    const hasPending = s.jobs.some((j) => j.status === "pending");
+    const hasAvailable = s.workers.some(
+      (w) => !w.isWorking && !w.assignedJobId && w.isOnline && !w.isSick
+    );
+    if (hasPending && hasAvailable) {
+      get().instantAssignJobs();
+    }
   },
 
   acceptInvestorDeal: () => {
@@ -1443,21 +1454,19 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   getJobUrgencyStatus: (job) => {
-    const state = get();
-    const currentGameTime = state.currentTime;
-    const jobAgeInHours = Math.max(0, currentGameTime - job.timeCreated); // Job age in game hours
-    const maxWaitTimeInHours = 10; // 10 game hours = 10 minutes display time
-    const timeElapsed = jobAgeInHours; // Return in game hours for UI conversion
-    const isOverdue = jobAgeInHours > maxWaitTimeInHours;
+    // Compute urgency off real time since job.timeCreated is a timestamp (ms)
+    const now = Date.now();
+    const jobAgeMs = Math.max(0, now - job.timeCreated);
+    const jobAgeMinutes = jobAgeMs / 60000; // minutes elapsed in real time
+    const maxWaitMinutes = 10; // overdue after 10 minutes real time
 
+    const isOverdue = jobAgeMinutes > maxWaitMinutes;
     let severity: "normal" | "warning" | "critical" = "normal";
-    if (jobAgeInHours > maxWaitTimeInHours) {
-      severity = "critical";
-    } else if (jobAgeInHours > maxWaitTimeInHours * 0.7) {
-      severity = "warning";
-    }
+    if (isOverdue) severity = "critical";
+    else if (jobAgeMinutes > maxWaitMinutes * 0.7) severity = "warning";
 
-    return { timeElapsed, isOverdue, severity };
+    // Return minutes so UI can display integer minutes easily
+    return { timeElapsed: jobAgeMinutes, isOverdue, severity };
   },
 
   resetGame: () => {
@@ -1469,15 +1478,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   autoAssignJobs: () => {
-    const state = get();
-    const now = Date.now();
+  const state = get();
     const availableWorkers = state.workers.filter(
       (w) => !w.isWorking && w.isOnline && !w.isSick
     );
-    // Only assign jobs that have been pending for at least 2 seconds (so they're visible first)
-    const pendingJobs = state.jobs.filter(
-      (j) => j.status === "pending" && now - j.timeCreated > 2000
-    );
+    // Assign any visible pending jobs immediately
+    const pendingJobs = state.jobs.filter((j) => j.status === "pending");
 
     console.log(
       `🔄 AutoAssign: ${state.workers.length} total workers, ${availableWorkers.length} available, ${pendingJobs.length} old pending jobs`
@@ -1490,7 +1496,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       });
     }
 
-    if (availableWorkers.length === 0 || pendingJobs.length === 0) return;
+  if (availableWorkers.length === 0 || pendingJobs.length === 0) return;
 
     // Sort jobs by urgency (highest first) and payment (highest first)
     const sortedJobs = pendingJobs.sort((a, b) => {
