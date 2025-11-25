@@ -5,7 +5,7 @@ import { useGameLoop } from "@/hooks/useGameLoop";
 
 import { Toaster, toast } from "sonner";
 import { useEffect } from "react";
-import HelpPopover from "./HelpPopover";
+import HelpPopover from "@/components/HelpPopover";
 
 function App() {
   useGameLoop();

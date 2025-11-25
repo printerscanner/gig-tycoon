@@ -545,21 +545,9 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const worker = state.workers.find((w) => w.id === workerId);
     const job = state.jobs.find((j) => j.id === jobId);
 
-    console.log(`🔗 assignJob called: job=${jobId}, worker=${workerId}`);
-    console.log(`Worker found: ${!!worker}, Job found: ${!!job}`);
-    if (worker)
-      console.log(`Worker ${worker.name} isWorking: ${worker.isWorking}`);
-
     if (!worker || !job || worker.isWorking) {
-      console.log(
-        `❌ Assignment failed: worker=${!!worker}, job=${!!job}, isWorking=${
-          worker?.isWorking
-        }`
-      );
       return;
     }
-
-    console.log(`✅ Assignment successful: ${worker.name} → Job ${jobId}`);
 
     set({
       ...state,
@@ -732,9 +720,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         get().generateJob();
       }
 
-      console.log(
-        `🚛 Generated ${jobsToGenerate} jobs, calling instantAssignJobs...`
-      );
       // Auto-assign new jobs to free couriers immediately (no delay)
       get().instantAssignJobs();
 
@@ -757,7 +742,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
           lastJobGeneration: now,
           currentTime: newTime,
         }));
-        console.log("🧯 Safety: generated 1 job due to inactivity");
       }
     }
 
@@ -825,14 +809,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
             worker.totalCost +
             (worker.monthlySalary / hoursPerMonth) * hoursSinceLastPayment,
         }));
-
-        if (totalWages > 0) {
-          console.log(
-            `💰 Paid €${totalWages.toFixed(
-              2
-            )} in office wages (${hoursSinceLastPayment} hour(s))`
-          );
-        }
 
         // Check for bankruptcy
         if (newCash < -20000) {
@@ -967,17 +943,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
           const { row, col } = worker.position;
           const { row: targetRow, col: targetCol } = worker.targetPosition;
 
-          // Check if worker is stuck (same position for several ticks)
-          if (
-            worker.lastPosition &&
-            worker.lastPosition.row === row &&
-            worker.lastPosition.col === col
-          ) {
-            console.log(
-              `Worker stuck at ${row},${col} trying to reach ${targetRow},${targetCol}`
-            );
-          }
-
           let newRow = row;
           let newCol = col;
 
@@ -1098,16 +1063,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
           const reachedTarget = newRow === targetRow && newCol === targetCol;
 
-          // Debug logging for stuck workers
-          if (worker.assignedJobId && newRow === row && newCol === col) {
-            const job = state.jobs.find((j) => j.id === worker.assignedJobId);
-            if (job) {
-              console.log(
-                `🚫 ${worker.name} stuck at (${row}, ${col}), trying to reach (${targetRow}, ${targetCol})`
-              );
-            }
-          }
-
           // If reached pickup, instantly move to dropoff
           if (reachedTarget && worker.assignedJobId) {
             const job = state.jobs.find((j) => j.id === worker.assignedJobId);
@@ -1116,9 +1071,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
               job.pickup.row === targetRow &&
               job.pickup.col === targetCol
             ) {
-              console.log(
-                `📦 ${worker.name} picked up job at (${targetRow}, ${targetCol}), heading to (${job.dropoff.row}, ${job.dropoff.col})`
-              );
               // Instant pickup - immediately set target to dropoff and mark as carrying order
               return {
                 ...worker,
@@ -1133,9 +1085,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
               job.dropoff.row === targetRow &&
               job.dropoff.col === targetCol
             ) {
-              console.log(
-                `✅ ${worker.name} reached dropoff at (${targetRow}, ${targetCol})`
-              );
               return {
                 ...worker,
                 position: { row: newRow, col: newCol },
@@ -1183,13 +1132,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
             worker.position.row === job.dropoff.row &&
             worker.position.col === job.dropoff.col
           ) {
-            // Complete the job as soon as worker reaches dropoff position
-            // No need to check targetPosition since we want instant completion
-
-            console.log(
-              `🎉 ${worker.name} completed delivery at (${job.dropoff.row}, ${job.dropoff.col})!`
-            );
-
             // Calculate customer rating based on worker happiness and job urgency
             const baseRating = Math.min(
               5,
@@ -1485,17 +1427,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // Assign any visible pending jobs immediately
     const pendingJobs = state.jobs.filter((j) => j.status === "pending");
 
-    console.log(
-      `🔄 AutoAssign: ${state.workers.length} total workers, ${availableWorkers.length} available, ${pendingJobs.length} old pending jobs`
-    );
-    if (state.workers.length > 0) {
-      state.workers.forEach((w) => {
-        console.log(
-          `  Worker ${w.name}: working=${w.isWorking}, online=${w.isOnline}, sick=${w.isSick}`
-        );
-      });
-    }
-
     if (availableWorkers.length === 0 || pendingJobs.length === 0) return;
 
     // Sort jobs by urgency (highest first) and payment (highest first)
@@ -1564,39 +1495,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // Find jobs that need assignment
     const pendingJobs = state.jobs.filter((j) => j.status === "pending");
 
-    console.log(`🔍 ASSIGNMENT CHECK:`);
-    console.log(`- Total workers: ${state.workers.length}`);
-    console.log(`- Available workers: ${availableWorkers.length}`);
-    console.log(`- Pending jobs: ${pendingJobs.length}`);
-
-    // Debug all workers
-    state.workers.forEach((w, i) => {
-      console.log(
-        `  Worker ${i}: ${w.name} - isWorking=${w.isWorking}, assignedJobId=${w.assignedJobId}, isOnline=${w.isOnline}, isSick=${w.isSick}`
-      );
-    });
-
-    if (availableWorkers.length > 0) {
-      availableWorkers.forEach((w) => {
-        console.log(
-          `  ✅ Available: ${w.name} (working=${w.isWorking}, assigned=${w.assignedJobId})`
-        );
-      });
-    }
-
     if (state.workers.length > availableWorkers.length) {
-      state.workers
-        .filter((w) => w.isWorking || w.assignedJobId)
-        .forEach((w) => {
-          console.log(
-            `  ❌ Busy: ${w.name} (working=${w.isWorking}, assigned=${w.assignedJobId})`
-          );
-        });
-    }
-
-    if (availableWorkers.length === 0 || pendingJobs.length === 0) {
-      console.log(`❌ Cannot assign: need workers AND jobs`);
-      return;
+      state.workers.filter((w) => w.isWorking || w.assignedJobId);
     }
 
     // Sort jobs by urgency (highest first) and payment (highest first)
@@ -1621,9 +1521,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
       const eligibleWorkers = availableWorkers.filter(
         (w) => !usedWorkers.has(w.id)
       );
-      console.log(
-        `🎯 Job ${job.id}: ${eligibleWorkers.length} eligible workers`
-      );
       if (eligibleWorkers.length === 0) break;
 
       // Find closest worker to pickup location
@@ -1638,23 +1535,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
       }
 
-      console.log(
-        `📍 Assigning job ${job.id} to ${closestWorker.name} (distance: ${minDistance})`
-      );
       assignments.push({ jobId: job.id, workerId: closestWorker.id });
       usedWorkers.add(closestWorker.id);
     }
 
     if (assignments.length > 0) {
-      console.log(
-        `✅ Making ${assignments.length} instant assignments:`,
-        assignments
-      );
       assignments.forEach(({ jobId, workerId }) => {
         get().assignJob(jobId, workerId);
       });
-    } else {
-      console.log("❌ No instant assignments made");
     }
   },
 

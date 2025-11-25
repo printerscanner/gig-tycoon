@@ -115,15 +115,6 @@ export function RightSidebar() {
     };
   };
 
-  // Debug logging
-  console.log("🔍 UI Debug:", {
-    totalJobs: jobs.length,
-    pendingJobs: pendingJobs.length,
-    assignedJobs: assignedJobs.length,
-    recentJobs: recentJobs.length,
-    jobs: jobs.map((j) => ({ id: j.id, type: j.type, status: j.status })),
-  });
-
   return (
     <Sidebar side="right" className="w-72 m-2">
       <SidebarContent>

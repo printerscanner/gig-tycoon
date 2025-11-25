@@ -1,6 +1,6 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/left-sidebar";
-import { RightSidebar } from "@/components/right-sidebar";
+import { AppSidebar } from "@/components/LeftSidebar";
+import { RightSidebar } from "@/components/RightSidebar";
 
 interface LayoutProps {
   children: React.ReactNode;
