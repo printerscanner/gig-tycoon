@@ -89,3 +89,9 @@ export const INVESTOR_CONFIG = {
   FIRST_FUNDING: 20000, // Amount of first funding
   MONTHLY_TARGET: 50, // Target deliveries per day after funding
 } as const;
+
+// Time system configuration
+export const TIME_CONFIG = {
+  DAYS_PER_REAL_SECOND: 0.002, // 0.002 game days per real second = ~8 minutes real time per game day
+  STARTING_DAY: 1, // Start at day 1
+} as const;

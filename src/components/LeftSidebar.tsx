@@ -9,7 +9,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useGameStore } from "@/stores/gameStore";
-import { formatDayAndTime } from "@/stores/utils/timeUtils";
+import { getCurrentDay } from "@/stores/utils/timeUtils";
 
 export function AppSidebar() {
   const {
@@ -23,7 +23,7 @@ export function AppSidebar() {
     hireWorker,
     hireOfficeWorker,
     hireSupportWorker,
-    gameHours,
+    gameDays,
   } = useGameStore();
 
   const formatCurrency = (amount: number) => `€${amount.toFixed(0)}`;
@@ -62,7 +62,7 @@ export function AppSidebar() {
             <div className="p-3 space-y-3 text-sm">
               <div className="flex justify-between">
                 <span>🕐 Time:</span>
-                <span className="font-bold">{formatDayAndTime(gameHours)}</span>
+                <span className="font-bold">Day {getCurrentDay(gameDays)}</span>
               </div>
               <div className="flex justify-between">
                 <span>💰 Cash:</span>

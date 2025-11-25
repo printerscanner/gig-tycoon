@@ -82,11 +82,11 @@ export interface GameState {
   customers: Customer[];
   selectedWorkerId?: string;
   
-  // Simplified time system - single source of truth
-  gameHours: number; // Total game hours since start (e.g., 25.5 = day 2, 1:30 AM)
+  // Simplified day-based time system - single source of truth
+  gameDays: number; // Total game days since start (e.g., 2.5 = day 2, halfway through)
   realStartTime: number; // Real timestamp when game started
-  lastExpenseCheck: number; // Last game hour when expenses were checked
-  lastWageCheck: number; // Last game hour when wages were checked
+  lastExpenseCheck: number; // Last game day when expenses were checked
+  lastWageCheck: number; // Last game day when wages were checked
   
   // Business metrics
   investorFunding: number;

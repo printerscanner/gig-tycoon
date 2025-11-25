@@ -1,4 +1,5 @@
-import { GAME_CONFIG, JOB_CONFIG } from "../constants/gameConstants";
+import { GAME_CONFIG } from "../constants/gameConstants";
+import type { OfficeWorker } from "@/types";
 
 // Generate a unique ID
 export const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -42,9 +43,12 @@ export const generateRandomBuildingPosition = () => {
   return buildings[Math.floor(Math.random() * buildings.length)];
 };
 
-// Get demand multiplier based on time of day
-export const getDemandMultiplier = (gameHours: number) => {
-  const hours = gameHours % 24; // Convert to 24-hour cycle
+// Get demand multiplier based on time of day (simplified for day-based system)
+export const getDemandMultiplier = (gameDays: number) => {
+  // Since we're using days now, we'll use a simplified approach
+  // Peak demand varies throughout the day cycle within each day
+  const dayProgress = gameDays % 1; // Get fractional part (0-1 within the day)
+  const hours = dayProgress * 24; // Convert to approximate hour of day
 
   // Peak hours: lunch (11-14) and dinner (17-21) - higher demand
   if ((hours >= 11 && hours < 14) || (hours >= 17 && hours < 21)) {
@@ -60,9 +64,11 @@ export const getDemandMultiplier = (gameHours: number) => {
   return 1.0;
 };
 
-// Get price multiplier for surge pricing
-export const getPriceMultiplier = (gameHours: number) => {
-  const hours = gameHours % 24; // Convert to 24-hour cycle
+// Get price multiplier for surge pricing (simplified for day-based system)
+export const getPriceMultiplier = (gameDays: number) => {
+  // Since we're using days now, we'll use a simplified approach
+  const dayProgress = gameDays % 1; // Get fractional part (0-1 within the day)
+  const hours = dayProgress * 24; // Convert to approximate hour of day
 
   // Peak hours get modest surge pricing
   if ((hours >= 11 && hours < 14) || (hours >= 17 && hours < 21)) {
@@ -78,7 +84,7 @@ export const getPriceMultiplier = (gameHours: number) => {
 };
 
 // Calculate maximum courier capacity based on office workers
-export const calculateMaxCourierCapacity = (officeWorkers: any[]) => {
+export const calculateMaxCourierCapacity = (officeWorkers: OfficeWorker[]) => {
   // Base capacity is 5 couriers (2 CEO/CTO already hired + 3 more slots)
   const baseCapacity = 5;
 
@@ -91,11 +97,11 @@ export const calculateMaxCourierCapacity = (officeWorkers: any[]) => {
   return baseCapacity + additionalCapacity;
 };
 
-// Calculate hourly costs for office workers based on monthly salary (~160 hours/month)
-export const calculateHourlyOfficeWages = (officeWorkers: any[]) => {
-  const hoursPerMonth = 160;
+// Calculate daily costs for office workers based on monthly salary (~30 days/month)
+export const calculateDailyOfficeWages = (officeWorkers: OfficeWorker[]) => {
+  const daysPerMonth = 30;
   return officeWorkers.reduce(
-    (total, worker) => total + worker.monthlySalary / hoursPerMonth,
+    (total, worker) => total + worker.monthlySalary / daysPerMonth,
     0
   );
 };

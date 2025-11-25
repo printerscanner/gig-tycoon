@@ -78,7 +78,7 @@ export const createWorkerActions = (set: SetState, get: GetState) => ({
       isOnline: true,
       isSick: false,
       mood: Math.floor(Math.random() * 20) + 70, // 70-90 mood
-      lastMoodCheck: state.gameHours,
+      lastMoodCheck: state.gameDays,
       totalHoursWorked: 0,
     };
 
@@ -125,7 +125,7 @@ export const createWorkerActions = (set: SetState, get: GetState) => ({
       efficiency: Math.floor(Math.random() * 20) + 80, // 80-100 efficiency
       adminCapacity: CAPACITY_PER_WORKER, // New office workers add 5 courier capacity each
       monthlySalary: MONTHLY_SALARY,
-      hiredAt: state.gameHours,
+      hiredAt: state.gameDays,
       totalCost: 0,
     };
 
@@ -175,7 +175,7 @@ export const createWorkerActions = (set: SetState, get: GetState) => ({
       ],
       supportCapacity: CAPACITY_PER_WORKER, // Supports 20 couriers each
       monthlySalary: MONTHLY_SALARY,
-      hiredAt: state.gameHours,
+      hiredAt: state.gameDays,
       totalCost: 0,
     };
 

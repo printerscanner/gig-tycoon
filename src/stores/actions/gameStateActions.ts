@@ -9,11 +9,12 @@ import {
 import { SARCASTIC_MESSAGES } from "../constants/gameData";
 import {
   getDemandMultiplier,
-  calculateHourlyOfficeWages,
+  calculateDailyOfficeWages,
   isRoadPosition,
 } from "../utils/gameUtils";
 import { generateNotification } from "../utils/notificationUtils";
-import { TIME_CONFIG, isNewDay, isNewHour } from "../utils/timeUtils";
+import { TIME_CONFIG } from "../constants/gameConstants";
+import { isNewDay } from "../utils/timeUtils";
 import { createInitialState } from "../gameState/initialState";
 
 type SetState = (
@@ -114,13 +115,13 @@ export const createGameStateActions = (set: SetState, get: GetState) => ({
     const now = Date.now();
     const currentState = get();
 
-    // Update game time using simplified system
-    const previousGameHours = currentState.gameHours;
-    const newGameHours =
-      currentState.gameHours + TIME_CONFIG.HOURS_PER_REAL_SECOND;
+    // Update game time using simplified day-based system
+    const previousGameDays = currentState.gameDays;
+    const newGameDays =
+      currentState.gameDays + TIME_CONFIG.DAYS_PER_REAL_SECOND;
 
-    // Check if we need to deduct daily expenses (every 24 hours = 1 day)
-    const hasNewDayStarted = isNewDay(newGameHours, previousGameHours);
+    // Check if we need to deduct daily expenses (when a new day starts)
+    const hasNewDayStarted = isNewDay(newGameDays, previousGameDays);
 
     if (hasNewDayStarted) {
       // Calculate daily expenses (weekly expenses / 7)
@@ -150,7 +151,7 @@ export const createGameStateActions = (set: SetState, get: GetState) => ({
           ...state,
           cash: state.cash - totalDailyExpenses,
           weeklyExpenses: state.weeklyExpenses + totalDailyExpenses,
-          lastExpenseCheck: newGameHours,
+          lastExpenseCheck: newGameDays,
         }));
 
         // Show notification for significant expense days
@@ -180,7 +181,7 @@ export const createGameStateActions = (set: SetState, get: GetState) => ({
 
     // Handle job generation with demand multiplier
     const timeSinceLastJob = now - currentState.lastJobGeneration;
-    const demandMultiplier = getDemandMultiplier(newGameHours);
+    const demandMultiplier = getDemandMultiplier(newGameDays);
     // Target 2.5 deliveries/hour per courier on average
     // Generate jobs more frequently with more couriers available
     const onlineCouriers = currentState.workers.filter(
@@ -212,7 +213,7 @@ export const createGameStateActions = (set: SetState, get: GetState) => ({
       set((state: GameState) => ({
         ...state,
         lastJobGeneration: now,
-        gameHours: newGameHours,
+        gameDays: newGameDays,
       }));
     } else {
       // Safety: if there are no active jobs for a while, create one
@@ -225,7 +226,7 @@ export const createGameStateActions = (set: SetState, get: GetState) => ({
         set((state: GameState) => ({
           ...state,
           lastJobGeneration: now,
-          gameHours: newGameHours,
+          gameDays: newGameDays,
         }));
       }
     }
@@ -275,26 +276,29 @@ export const createGameStateActions = (set: SetState, get: GetState) => ({
       let newCash = state.cash;
       let newLastWageCheck = state.lastWageCheck;
 
-      // Pay office worker wages every game hour
-      const hasNewHourPassed = isNewHour(newGameHours, state.lastWageCheck);
+      // Pay office worker wages every game day
+      const hasNewDayPassedForWages = isNewDay(
+        newGameDays,
+        state.lastWageCheck
+      );
 
-      if (hasNewHourPassed) {
-        const hoursSinceLastPayment = Math.floor(
-          newGameHours - state.lastWageCheck
+      if (hasNewDayPassedForWages) {
+        const daysSinceLastPayment = Math.floor(
+          newGameDays - state.lastWageCheck
         );
-        const hourlyWages = calculateHourlyOfficeWages(state.officeWorkers);
-        const totalWages = hourlyWages * hoursSinceLastPayment;
+        const dailyWages = calculateDailyOfficeWages(state.officeWorkers);
+        const totalWages = dailyWages * daysSinceLastPayment;
 
         newCash -= totalWages;
-        newLastWageCheck = newGameHours;
+        newLastWageCheck = newGameDays;
 
         // Update office workers' total costs
-        const hoursPerMonth = EXPENSE_CONFIG.HOURS_PER_MONTH;
+        const daysPerMonth = 30; // Approximate days per month
         const updatedOfficeWorkers = state.officeWorkers.map((worker) => ({
           ...worker,
           totalCost:
             worker.totalCost +
-            (worker.monthlySalary / hoursPerMonth) * hoursSinceLastPayment,
+            (worker.monthlySalary / daysPerMonth) * daysSinceLastPayment,
         }));
 
         // Check for bankruptcy
@@ -305,14 +309,14 @@ export const createGameStateActions = (set: SetState, get: GetState) => ({
         }
 
         return {
-          gameHours: newGameHours,
+          gameDays: newGameDays,
           cash: newCash,
           lastWageCheck: newLastWageCheck,
           officeWorkers: updatedOfficeWorkers,
         };
       }
 
-      return { gameHours: newGameHours };
+      return { gameDays: newGameDays };
     });
 
     // Auto-assignment logic (every 3 seconds)
@@ -331,7 +335,7 @@ export const createGameStateActions = (set: SetState, get: GetState) => ({
       const statusUpdatedWorkers = state.workers
         .map((worker: Worker) => {
           // Check if worker should be online based on working hours
-          const currentHour = Math.floor(newGameHours % 24);
+          const currentHour = Math.floor(newGameDays % 24);
           const startHour = Math.floor(worker.workingHours.start / 60);
           const endHour = Math.floor(worker.workingHours.end / 60);
 
@@ -348,11 +352,11 @@ export const createGameStateActions = (set: SetState, get: GetState) => ({
           const isStillSick = !!(
             worker.isSick &&
             worker.sickUntil !== undefined &&
-            newGameHours < worker.sickUntil
+            newGameDays < worker.sickUntil
           );
 
           // Random sickness check (once per game hour, only if online and not already sick)
-          const timeSinceLastMoodCheck = newGameHours - worker.lastMoodCheck;
+          const timeSinceLastMoodCheck = newGameDays - worker.lastMoodCheck;
           if (timeSinceLastMoodCheck >= 1 && shouldBeOnline && !isStillSick) {
             // Check every game hour
             let newMood = worker.mood;
@@ -363,7 +367,7 @@ export const createGameStateActions = (set: SetState, get: GetState) => ({
             const sicknessProbability = Math.max(0, (100 - worker.mood) / 1000); // 0-10% based on mood
             if (Math.random() < sicknessProbability) {
               newIsSick = true;
-              newSickUntil = newGameHours + (Math.random() * 8 + 4); // Sick for 4-12 game hours
+              newSickUntil = newGameDays + (Math.random() * 8 + 4); // Sick for 4-12 game hours
               toast.warning(`😷 ${worker.name} called in sick`, {
                 description: `They'll be back later today`,
               });
@@ -394,11 +398,11 @@ export const createGameStateActions = (set: SetState, get: GetState) => ({
               isSick: newIsSick,
               sickUntil: newSickUntil,
               mood: newMood,
-              lastMoodCheck: newGameHours,
+              lastMoodCheck: newGameDays,
               totalHoursWorked:
                 worker.totalHoursWorked +
                 (shouldBeOnline && !newIsSick
-                  ? TIME_CONFIG.HOURS_PER_REAL_SECOND
+                  ? TIME_CONFIG.DAYS_PER_REAL_SECOND * 24
                   : 0),
             };
           }
@@ -410,7 +414,7 @@ export const createGameStateActions = (set: SetState, get: GetState) => ({
             totalHoursWorked:
               worker.totalHoursWorked +
               (shouldBeOnline && !isStillSick
-                ? TIME_CONFIG.HOURS_PER_REAL_SECOND
+                ? TIME_CONFIG.DAYS_PER_REAL_SECOND * 24
                 : 0),
           };
         })

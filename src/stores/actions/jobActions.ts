@@ -43,7 +43,7 @@ export const createJobActions = (set: SetState, get: GetState) => ({
     const distanceBonus = normalizedDistance * JOB_CONFIG.MAX_DISTANCE_BONUS;
 
     // Add urgency multiplier and time-based surge pricing
-    const priceMultiplier = getPriceMultiplier(currentState.gameHours);
+    const priceMultiplier = getPriceMultiplier(currentState.gameDays);
     const urgencyMultiplier = 1 + (urgency - 1) * JOB_CONFIG.URGENCY_MULTIPLIER;
 
     // Final total order value (what shows up in the game)

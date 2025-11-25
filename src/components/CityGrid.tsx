@@ -1,13 +1,12 @@
 import React from "react";
 import type { CityTile, Worker, Job } from "@/types";
+import { GAME_CONFIG } from "@/stores/constants/gameConstants";
 
 interface CityGridProps {
   workers: Worker[];
   jobs: Job[];
   onTileClick: (row: number, col: number) => void;
 }
-
-const GRID_SIZE = 12; // 12x12 grid for more compact view and support for multiple grids
 
 const CityGrid: React.FC<CityGridProps> = ({ workers, jobs, onTileClick }) => {
   const generateTile = (row: number, col: number): CityTile => {
@@ -21,8 +20,8 @@ const CityGrid: React.FC<CityGridProps> = ({ workers, jobs, onTileClick }) => {
     if (
       row % 3 === 0 ||
       col % 3 === 0 ||
-      row === GRID_SIZE - 1 ||
-      col === GRID_SIZE - 1
+      row === GAME_CONFIG.GRID_SIZE - 1 ||
+      col === GAME_CONFIG.GRID_SIZE - 1
     ) {
       isRoad = true;
       type = "park"; // Use park type for roads
@@ -125,23 +124,19 @@ const CityGrid: React.FC<CityGridProps> = ({ workers, jobs, onTileClick }) => {
 
   return (
     <div className="flex flex-col w-full h-full gap-2">
-      <div className="text-center flex items-center justify-center gap-2">
-        <h2 className="text-lg font-bold">🚚 DELIVERY MAP</h2>
-      </div>
-
       <div
         className="flex-1 grid gap-0 bg-gray-200 rounded-lg shadow-lg border-2 border-gray-300 overflow-hidden mx-auto"
         style={{
-          gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
-          gridTemplateRows: `repeat(${GRID_SIZE}, minmax(0, 1fr))`,
+          gridTemplateColumns: `repeat(${GAME_CONFIG.GRID_SIZE}, minmax(0, 1fr))`,
+          gridTemplateRows: `repeat(${GAME_CONFIG.GRID_SIZE}, minmax(0, 1fr))`,
           maxWidth: "400px",
           maxHeight: "400px",
           aspectRatio: "1/1",
           width: "100%",
         }}
       >
-        {Array.from({ length: GRID_SIZE }).map((_, row) =>
-          Array.from({ length: GRID_SIZE }).map((_, col) => {
+        {Array.from({ length: GAME_CONFIG.GRID_SIZE }).map((_, row) =>
+          Array.from({ length: GAME_CONFIG.GRID_SIZE }).map((_, col) => {
             const tile = generateTile(row, col);
             const workersAtPosition = workers.filter(
               (worker) =>
@@ -245,56 +240,6 @@ const CityGrid: React.FC<CityGridProps> = ({ workers, jobs, onTileClick }) => {
             );
           })
         )}
-      </div>
-
-      <div className="flex gap-4 text-sm text-gray-600 justify-center flex-wrap">
-        <div className="flex items-center gap-1">
-          <div className="w-4 h-4 bg-red-100 border border-gray-400 rounded"></div>
-          <span>Restaurants</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-4 h-4 bg-blue-100 border border-gray-400 rounded"></div>
-          <span>Offices</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-4 h-4 bg-green-100 border border-gray-400 rounded"></div>
-          <span>Stores</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-4 h-4 bg-gray-50 border border-gray-400 rounded"></div>
-          <span>Homes</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-4 h-4 bg-gray-400 border border-gray-500 rounded"></div>
-          <span>Roads</span>
-        </div>
-      </div>
-
-      <div className="flex gap-4 text-sm text-gray-600 justify-center flex-wrap">
-        <div className="flex items-center gap-1">
-          <span className="text-base">🚴</span>
-          <span>Working</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-base">🧍</span>
-          <span>Idle</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-base">📌</span>
-          <span>Carrying Order</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-4 h-4 bg-green-500 rounded-full border border-white flex items-center justify-center text-xs text-white font-bold">
-            P
-          </div>
-          <span>Pickup</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-4 h-4 bg-red-500 rounded-full border border-white flex items-center justify-center text-xs text-white font-bold">
-            D
-          </div>
-          <span>Dropoff</span>
-        </div>
       </div>
     </div>
   );

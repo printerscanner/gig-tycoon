@@ -1,7 +1,7 @@
 import type { GameState } from "@/types";
 import { GAME_CONFIG } from "../constants/gameConstants";
 import { generateNotification } from "../utils/notificationUtils";
-import { TIME_CONFIG } from "../utils/timeUtils";
+import { TIME_CONFIG } from "../constants/gameConstants";
 
 export const createInitialState = (): GameState => ({
   cash: GAME_CONFIG.STARTING_CASH, // Now starts with €10,000 instead of €400,000
@@ -78,8 +78,8 @@ export const createInitialState = (): GameState => ({
   jobs: [],
   customers: [],
 
-  // Simplified time system
-  gameHours: TIME_CONFIG.STARTING_HOUR, // Start at noon on day 1
+  // Simplified day-based time system
+  gameDays: TIME_CONFIG.STARTING_DAY, // Start at day 1
   realStartTime: Date.now(),
   lastExpenseCheck: 0,
   lastWageCheck: 0,

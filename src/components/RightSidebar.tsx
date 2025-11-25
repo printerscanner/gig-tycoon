@@ -55,7 +55,7 @@ export function RightSidebar() {
   const activeJobs = jobs.filter(
     (job) => job.status === "pending" || job.status === "assigned"
   );
-  const pendingJobs = jobs.filter((job) => job.status === "pending"); // Keep for existing code
+  // const pendingJobs = jobs.filter((job) => job.status === "pending"); // Removed - not used
   const assignedJobs = jobs.filter((job) => job.status === "assigned");
   const recentJobs = jobs.filter((job) => job.status === "completed").slice(-3);
 
