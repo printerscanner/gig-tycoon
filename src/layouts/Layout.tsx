@@ -1,4 +1,7 @@
-import { GameModal } from "@/components/GameModal";
+import { StatsModal } from "@/components/modals/StatsModal";
+import { WorkersModal } from "@/components/modals/WorkersModal";
+import { OrdersModal } from "@/components/modals/OrdersModal";
+import { SettingsModal } from "@/components/modals/SettingsModal";
 import { StatusOverlay } from "@/components/StatusOverlay";
 import { useGameStore } from "@/stores/gameStore";
 import { getCurrentDay } from "@/stores/utils/timeUtils";
@@ -41,7 +44,17 @@ export default function Layout({ children }: LayoutProps) {
           </div>
         </div>
 
-        <div className="text-lg font-bold text-blue-600">🍕 FoodDash</div>
+        <div className="flex items-center gap-4">
+          <div className="text-lg font-bold text-blue-600">🍕 FoodDash</div>
+
+          {/* Game Control Buttons */}
+          <div className="flex gap-2">
+            <StatsModal />
+            <WorkersModal />
+            <OrdersModal />
+            <SettingsModal />
+          </div>
+        </div>
       </div>
 
       {/* Main Game Area */}
@@ -50,9 +63,6 @@ export default function Layout({ children }: LayoutProps) {
           <div className="w-full max-w-6xl h-full">{children}</div>
         </div>
       </main>
-
-      {/* Game Modal */}
-      <GameModal />
 
       {/* Status Overlay */}
       <StatusOverlay />
