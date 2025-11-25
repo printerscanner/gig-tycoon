@@ -45,7 +45,9 @@ export default function Layout({ children }: LayoutProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="text-lg font-bold text-blue-600">🍕 FoodDash</div>
+          <div className="text-lg font-bold text-blue-600">
+            🍕 FoodDash Berlin
+          </div>
 
           {/* Game Control Buttons */}
           <div className="flex gap-2">
@@ -57,11 +59,9 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </div>
 
-      {/* Main Game Area */}
+      {/* Main Game Area - Fullscreen Map */}
       <main className="flex-1 h-[calc(100vh-60px)] overflow-hidden">
-        <div className="h-full flex items-center justify-center p-4">
-          <div className="w-full max-w-6xl h-full">{children}</div>
-        </div>
+        <div className="w-full h-full">{children}</div>
       </main>
 
       {/* Status Overlay */}
