@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -54,11 +54,13 @@ export function WorkersModal() {
         <DialogHeader>
           <DialogTitle>👥 Worker Management</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-6 overflow-y-auto max-h-[60vh]">
           {/* Couriers */}
           <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="font-semibold mb-3">🛵 Couriers ({workers.length})</h3>
+            <h3 className="font-semibold mb-3">
+              🛵 Couriers ({workers.length})
+            </h3>
             <div className="space-y-3 max-h-60 overflow-y-auto">
               {workers.map((worker) => (
                 <div key={worker.id} className="bg-white p-3 rounded border">
@@ -110,7 +112,9 @@ export function WorkersModal() {
 
           {/* Office Workers */}
           <div className="bg-orange-50 p-4 rounded-lg">
-            <h3 className="font-semibold mb-3">🏢 Office Workers ({officeWorkers.length})</h3>
+            <h3 className="font-semibold mb-3">
+              🏢 Office Workers ({officeWorkers.length})
+            </h3>
             <div className="space-y-3 max-h-40 overflow-y-auto">
               {officeWorkers.map((worker, index) => (
                 <div key={worker.id} className="bg-white p-3 rounded border">
@@ -124,7 +128,9 @@ export function WorkersModal() {
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>⚡ Efficiency: {worker.efficiency}/100</div>
                     <div>👥 Capacity: {worker.adminCapacity} couriers</div>
-                    <div>💰 Salary: €{worker.monthlySalary.toLocaleString()}/month</div>
+                    <div>
+                      💰 Salary: €{worker.monthlySalary.toLocaleString()}/month
+                    </div>
                     <div>📈 Total Cost: {formatCurrency(worker.totalCost)}</div>
                   </div>
                 </div>
@@ -141,7 +147,9 @@ export function WorkersModal() {
 
           {/* Support Staff */}
           <div className="bg-purple-50 p-4 rounded-lg">
-            <h3 className="font-semibold mb-3">📞 Support Staff ({supportStaff.length})</h3>
+            <h3 className="font-semibold mb-3">
+              📞 Support Staff ({supportStaff.length})
+            </h3>
             <div className="space-y-3 max-h-40 overflow-y-auto">
               {supportStaff.map((worker) => (
                 <div key={worker.id} className="bg-white p-3 rounded border">
@@ -154,7 +162,9 @@ export function WorkersModal() {
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div>👥 Capacity: {worker.supportCapacity} couriers</div>
-                    <div>💰 Salary: €{worker.monthlySalary.toLocaleString()}/month</div>
+                    <div>
+                      💰 Salary: €{worker.monthlySalary.toLocaleString()}/month
+                    </div>
                     <div>📈 Total Cost: {formatCurrency(worker.totalCost)}</div>
                   </div>
                 </div>

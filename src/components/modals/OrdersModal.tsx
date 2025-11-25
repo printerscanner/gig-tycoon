@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,17 +13,24 @@ import type { Job } from "@/types";
 export function OrdersModal() {
   const [isOpen, setIsOpen] = useState(false);
 
-  const {
-    jobs,
-    workers,
-    getJobUrgencyStatus,
-  } = useGameStore();
+  const { jobs, workers, getJobUrgencyStatus } = useGameStore();
 
   const formatCurrency = (amount: number) => `€${amount.toFixed(2)}`;
 
   const getJobTypeIcon = (job: Job) => {
     const foodIcons = [
-      "🍕", "🍔", "🥗", "🍜", "🌮", "🍣", "🍗", "🥪", "🍝", "🍰", "☕", "🥘",
+      "🍕",
+      "🍔",
+      "🥗",
+      "🍜",
+      "🌮",
+      "🍣",
+      "🍗",
+      "🥪",
+      "🍝",
+      "🍰",
+      "☕",
+      "🥘",
     ];
     const hash = job.id.split("").reduce((a, b) => a + b.charCodeAt(0), 0);
     return foodIcons[hash % foodIcons.length];
@@ -88,17 +95,20 @@ export function OrdersModal() {
         <DialogHeader>
           <DialogTitle>📋 Order Management</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-6 overflow-y-auto max-h-[60vh]">
           {/* Active Orders */}
           <div className="bg-yellow-50 p-4 rounded-lg">
-            <h3 className="font-semibold mb-3">📋 Active Orders ({activeJobs.length})</h3>
+            <h3 className="font-semibold mb-3">
+              📋 Active Orders ({activeJobs.length})
+            </h3>
             <div className="space-y-3 max-h-60 overflow-y-auto">
               {activeJobs.slice(0, 8).map((job) => {
                 const urgencyStatus = getJobUrgencyStatus(job);
                 const timeElapsedHours = urgencyStatus.timeElapsed;
                 const elapsedMinutes = Math.floor(timeElapsedHours);
-                const timeDisplay = elapsedMinutes === 0 ? "0m" : `${elapsedMinutes}m`;
+                const timeDisplay =
+                  elapsedMinutes === 0 ? "0m" : `${elapsedMinutes}m`;
                 const detailedStatus = getDetailedJobStatus(job);
 
                 return (
@@ -132,9 +142,13 @@ export function OrdersModal() {
                         </span>
                       </div>
                     </div>
-                    <div className="text-xs text-gray-600 mb-1">{job.description}</div>
+                    <div className="text-xs text-gray-600 mb-1">
+                      {job.description}
+                    </div>
                     <div className="text-xs">
-                      <span className={detailedStatus.color}>{detailedStatus.text}</span>
+                      <span className={detailedStatus.color}>
+                        {detailedStatus.text}
+                      </span>
                     </div>
                   </div>
                 );
@@ -149,7 +163,9 @@ export function OrdersModal() {
 
           {/* In Progress Orders */}
           <div className="bg-blue-50 p-4 rounded-lg">
-            <h3 className="font-semibold mb-3">🚀 In Progress ({assignedJobs.length})</h3>
+            <h3 className="font-semibold mb-3">
+              🚀 In Progress ({assignedJobs.length})
+            </h3>
             <div className="space-y-3">
               {assignedJobs.slice(0, 3).map((job) => {
                 const worker = workers.find(

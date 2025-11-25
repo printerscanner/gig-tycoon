@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -47,7 +47,7 @@ export function StatsModal() {
         <DialogHeader>
           <DialogTitle>📊 Game Statistics</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-6">
           {/* Basic Stats */}
           <div className="bg-gray-50 p-4 rounded-lg">
@@ -144,7 +144,9 @@ export function StatsModal() {
               </div>
               <div className="flex justify-between">
                 <span>☁️ Cloud/Infrastructure:</span>
-                <span className="text-red-600">-€{(5000).toLocaleString()}</span>
+                <span className="text-red-600">
+                  -€{(5000).toLocaleString()}
+                </span>
               </div>
               <div className="flex justify-between border-t border-gray-300 pt-2 font-semibold">
                 <span>💸 Total/Month:</span>
@@ -153,7 +155,9 @@ export function StatsModal() {
                   {(
                     officeWorkers.length * 10000 +
                     supportStaff.length * 2500 +
-                    (20000 + workers.length * 1000 + officeWorkers.length * 2000) +
+                    (20000 +
+                      workers.length * 1000 +
+                      officeWorkers.length * 2000) +
                     5000
                   ).toLocaleString()}
                 </span>

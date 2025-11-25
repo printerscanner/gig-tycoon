@@ -1,19 +1,12 @@
-import React from "react";
 import { useGameStore } from "@/stores/gameStore";
 import { getCurrentDay } from "@/stores/utils/timeUtils";
 
 export function StatusOverlay() {
-  const { 
-    cash, 
-    gameDays, 
-    reputation, 
-    workers, 
-    jobs,
-    officeWorkers 
-  } = useGameStore();
-  
+  const { cash, gameDays, reputation, workers, jobs, officeWorkers } =
+    useGameStore();
+
   const formatCurrency = (amount: number) => `€${amount.toFixed(0)}`;
-  
+
   const activeJobs = jobs.filter(
     (job) => job.status === "pending" || job.status === "assigned"
   );
@@ -35,55 +28,55 @@ export function StatusOverlay() {
           <span>🕐</span>
           <span className="font-medium">Day {getCurrentDay(gameDays)}</span>
         </div>
-        
+
         <div className="flex items-center gap-1">
           <span>💰</span>
-          <span 
+          <span
             className={`font-medium ${
-              cash < 0 
-                ? "text-red-600" 
-                : cash < 1000 
-                ? "text-yellow-600" 
+              cash < 0
+                ? "text-red-600"
+                : cash < 1000
+                ? "text-yellow-600"
                 : "text-green-600"
             }`}
           >
             {formatCurrency(cash)}
           </span>
         </div>
-        
+
         <div className="flex items-center gap-1">
           <span>🛵</span>
           <span className="font-medium">
             {workers.length}/{calculateMaxCapacity()}
           </span>
         </div>
-        
+
         <div className="flex items-center gap-1">
           <span>⭐</span>
-          <span 
+          <span
             className={`font-medium ${
-              reputation >= 80 
-                ? "text-green-600" 
-                : reputation >= 60 
-                ? "text-yellow-600" 
+              reputation >= 80
+                ? "text-green-600"
+                : reputation >= 60
+                ? "text-yellow-600"
                 : "text-red-600"
             }`}
           >
             {reputation.toFixed(0)}
           </span>
         </div>
-        
+
         <div className="flex items-center gap-1">
           <span>📋</span>
           <span className="font-medium text-orange-600">
             {activeJobs.length} active
           </span>
         </div>
-        
+
         <div className="flex items-center gap-1">
           <span>👥</span>
           <span className="font-medium">
-            {workers.filter(w => w.isWorking).length} working
+            {workers.filter((w) => w.isWorking).length} working
           </span>
         </div>
       </div>
