@@ -74,26 +74,27 @@ export interface GameState {
   workerMorale: number; // 0-100, average happiness
   completedJobs: number;
   platformCommission: number; // 10-30% commission (default 20%)
-  courierPayout: number; // $2-4 per delivery (what couriers get paid)
+  courierPayout: number; // €2-4 per delivery (what couriers get paid)
   workers: Worker[];
   officeWorkers: OfficeWorker[];
   supportStaff: SupportWorker[];
   jobs: Job[];
   customers: Customer[];
   selectedWorkerId?: string;
-  gameStartTime: number;
-  currentWeek: number; // Track weeks instead of days
-  daysInBusiness: number; // Track total days the company has been operating
-  gameSpeed: number;
+  
+  // Simplified time system - single source of truth
+  gameHours: number; // Total game hours since start (e.g., 25.5 = day 2, 1:30 AM)
+  realStartTime: number; // Real timestamp when game started
+  lastExpenseCheck: number; // Last game hour when expenses were checked
+  lastWageCheck: number; // Last game hour when wages were checked
+  
+  // Business metrics
   investorFunding: number;
   weeklyTarget: number;
   notifications: Notification[];
-  currentTime: number; // Current game time in hours (0-167, representing a week)
-  gameTimeMultiplier: number; // How fast game time passes
-  lastExpensePayment: number; // Last time weekly expenses were paid
   weeklyRevenue: number; // Track weekly revenue
   weeklyExpenses: number; // Track weekly expenses
-  lastWagePayment: number; // Last time office wages were paid (game hours)
+  lastJobGeneration: number; // Track when last job was generated (real timestamp)
 }
 
 export interface Notification {

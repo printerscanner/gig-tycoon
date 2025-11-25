@@ -9,6 +9,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useGameStore } from "@/stores/gameStore";
+import { formatDayAndTime } from "@/stores/utils/timeUtils";
 
 export function AppSidebar() {
   const {
@@ -22,8 +23,7 @@ export function AppSidebar() {
     hireWorker,
     hireOfficeWorker,
     hireSupportWorker,
-    currentTime,
-    daysInBusiness,
+    gameHours,
   } = useGameStore();
 
   const formatCurrency = (amount: number) => `€${amount.toFixed(0)}`;
@@ -42,14 +42,7 @@ export function AppSidebar() {
     return baseCapacity + additionalCapacity;
   };
 
-  const formatGameTime = (gameHours: number) => {
-    // gameHours is now in hours (e.g., 14.5 = 2:30 PM)
-    const hours = Math.floor(gameHours) % 24;
-    const minutes = Math.floor((gameHours % 1) * 60); // Convert decimal part to minutes
-    const ampm = hours >= 12 ? "PM" : "AM";
-    const displayHours = hours % 12 || 12;
-    return `${displayHours}:${minutes.toString().padStart(2, "0")} ${ampm}`;
-  };
+  // Time formatting is now handled by the timeUtils module
 
   const getWorkerTraitEmoji = (traits: Array<{ name: string }>) => {
     if (traits.some((t) => t.name === "Hustler")) return "⚡";
@@ -69,13 +62,7 @@ export function AppSidebar() {
             <div className="p-3 space-y-3 text-sm">
               <div className="flex justify-between">
                 <span>🕐 Time:</span>
-                <span className="font-bold">{formatGameTime(currentTime)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>📅 Days in Business:</span>
-                <span className="font-bold text-blue-600">
-                  Day {daysInBusiness}
-                </span>
+                <span className="font-bold">{formatDayAndTime(gameHours)}</span>
               </div>
               <div className="flex justify-between">
                 <span>💰 Cash:</span>

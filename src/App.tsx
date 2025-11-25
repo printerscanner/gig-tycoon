@@ -14,9 +14,9 @@ function App() {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      toast.info("🎉 Welcome to Gig Tycoon: Pre-Seed round!", {
+      toast.info("🎉 Welcome to Gig Tycoon: Bootstrap Phase!", {
         description:
-          "You developed an app prototype and raised €400,000 from friends and family. You can use this money to hire workers and expand your business.",
+          "You developed an app prototype with €10,000 bootstrap funding. Prove your concept to unlock investor funding! Start small and grow smart.",
         duration: 6000,
       });
     }, 1000);
