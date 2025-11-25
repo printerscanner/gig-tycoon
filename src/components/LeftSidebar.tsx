@@ -9,7 +9,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useGameStore } from "@/stores/gameStore";
-import { getCurrentDay } from "@/stores/utils/timeUtils";
+import { getCurrentDay, getCurrentMonth } from "@/stores/utils/timeUtils";
 
 export function AppSidebar() {
   const {
@@ -99,30 +99,33 @@ export function AppSidebar() {
                 </span>
               </div>
 
-              {/* Weekly Expenses Section */}
+              {/* Monthly Expenses Section */}
               <div className="pt-2 border-t border-gray-200">
                 <div className="text-xs font-semibold text-gray-700 mb-2">
                   📊 MONTHLY EXPENSES
+                </div>
+                <div className="text-xs text-gray-600 mb-2">
+                  Next payment: Day {getCurrentMonth(gameDays) * 30}
                 </div>
                 <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span>👥 Office Workers:</span>
                     <span className="text-red-600">
-                      -$
+                      -€
                       {(officeWorkers.length * 10000).toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>📞 Support Staff:</span>
                     <span className="text-red-600">
-                      -$
+                      -€
                       {(supportStaff.length * 2500).toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>🏢 Rent & Legal:</span>
                     <span className="text-red-600">
-                      -$
+                      -€
                       {(
                         20000 +
                         workers.length * 1000 +
@@ -133,13 +136,13 @@ export function AppSidebar() {
                   <div className="flex justify-between">
                     <span>☁️ Cloud/Infrastructure:</span>
                     <span className="text-red-600">
-                      -${(5000).toLocaleString()}+
+                      -€{(5000).toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between border-t border-gray-300 pt-1 font-semibold">
                     <span>💸 Total/Month:</span>
                     <span className="text-red-600">
-                      -$
+                      -€
                       {(
                         officeWorkers.length * 10000 +
                         supportStaff.length * 2500 +

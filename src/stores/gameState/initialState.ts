@@ -4,7 +4,7 @@ import { generateNotification } from "../utils/notificationUtils";
 import { TIME_CONFIG } from "../constants/gameConstants";
 
 export const createInitialState = (): GameState => ({
-  cash: GAME_CONFIG.STARTING_CASH, // Now starts with €10,000 instead of €400,000
+  cash: GAME_CONFIG.STARTING_CASH,
   reputation: GAME_CONFIG.STARTING_REPUTATION,
   workerMorale: GAME_CONFIG.STARTING_WORKER_MORALE,
   completedJobs: 0,
@@ -23,7 +23,7 @@ export const createInitialState = (): GameState => ({
       traits: [
         { name: "Reliable", description: "Always on time", effect: "positive" },
       ],
-      workingHours: { start: 480, end: 1200 }, // 8:00 AM to 8:00 PM
+      workingHours: { start: 480, end: 1200 },
       isOnline: true,
       isSick: false,
       mood: 75,
@@ -46,7 +46,7 @@ export const createInitialState = (): GameState => ({
           effect: "positive",
         },
       ],
-      workingHours: { start: 600, end: 1320 }, // 10:00 AM to 10:00 PM
+      workingHours: { start: 600, end: 1320 },
       isOnline: true,
       isSick: false,
       mood: 80,
@@ -59,7 +59,7 @@ export const createInitialState = (): GameState => ({
       id: "office-1",
       name: "Morgan",
       efficiency: 95,
-      adminCapacity: 0, // CEO doesn't add capacity - is operational founder
+      adminCapacity: 0,
       monthlySalary: 10000,
       hiredAt: 0,
       totalCost: 0,
@@ -68,7 +68,7 @@ export const createInitialState = (): GameState => ({
       id: "office-2",
       name: "Taylor",
       efficiency: 98,
-      adminCapacity: 0, // CTO doesn't add capacity - is operational founder
+      adminCapacity: 0,
       monthlySalary: 10000,
       hiredAt: 0,
       totalCost: 0,
@@ -79,7 +79,7 @@ export const createInitialState = (): GameState => ({
   customers: [],
 
   // Simplified day-based time system
-  gameDays: TIME_CONFIG.STARTING_DAY, // Start at day 1
+  gameDays: TIME_CONFIG.STARTING_DAY,
   realStartTime: Date.now(),
   lastExpenseCheck: 0,
   lastWageCheck: 0,

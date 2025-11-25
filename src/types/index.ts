@@ -85,7 +85,7 @@ export interface GameState {
   // Simplified day-based time system - single source of truth
   gameDays: number; // Total game days since start (e.g., 2.5 = day 2, halfway through)
   realStartTime: number; // Real timestamp when game started
-  lastExpenseCheck: number; // Last game day when expenses were checked
+  lastExpenseCheck: number; // Last game day when monthly expenses were checked
   lastWageCheck: number; // Last game day when wages were checked
   
   // Business metrics

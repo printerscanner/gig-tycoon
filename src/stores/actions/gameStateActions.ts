@@ -10,11 +10,12 @@ import { SARCASTIC_MESSAGES } from "../constants/gameData";
 import {
   getDemandMultiplier,
   calculateDailyOfficeWages,
+  calculateMonthlyExpenses,
   isRoadPosition,
 } from "../utils/gameUtils";
 import { generateNotification } from "../utils/notificationUtils";
 import { TIME_CONFIG } from "../constants/gameConstants";
-import { isNewDay } from "../utils/timeUtils";
+import { isNewDay, isNewMonth } from "../utils/timeUtils";
 import { createInitialState } from "../gameState/initialState";
 
 type SetState = (
@@ -116,58 +117,45 @@ export const createGameStateActions = (set: SetState, get: GetState) => ({
     const currentState = get();
 
     // Update game time using simplified day-based system
-    const previousGameDays = currentState.gameDays;
     const newGameDays =
       currentState.gameDays + TIME_CONFIG.DAYS_PER_REAL_SECOND;
 
-    // Check if we need to deduct daily expenses (when a new day starts)
-    const hasNewDayStarted = isNewDay(newGameDays, previousGameDays);
+    // Check if we need to deduct monthly expenses (when a new month starts)
+    const hasNewMonthStarted = isNewMonth(
+      newGameDays,
+      currentState.lastExpenseCheck
+    );
 
-    if (hasNewDayStarted) {
-      // Calculate daily expenses (weekly expenses / 7)
-      const officeWorkerCost = Math.floor(
-        (currentState.officeWorkers.length * EXPENSE_CONFIG.BASE_RENT_LEGAL) /
-          4 /
-          7
-      ); // Monthly to daily
-      const supportStaffCost = Math.floor(
-        (currentState.supportStaff.length * 2500) / 4 / 7
-      ); // Monthly to daily
-      const rentAndLegalCost = Math.floor(
-        (EXPENSE_CONFIG.BASE_RENT_LEGAL +
-          currentState.workers.length * EXPENSE_CONFIG.RENT_PER_COURIER +
-          currentState.officeWorkers.length *
-            EXPENSE_CONFIG.RENT_PER_OFFICE_WORKER) /
-          4 /
-          7
+    if (hasNewMonthStarted) {
+      // Calculate monthly expenses
+      const monthlyExpenses = calculateMonthlyExpenses(
+        currentState.workers,
+        currentState.officeWorkers,
+        currentState.supportStaff
       );
-      const cloudCost = Math.floor(EXPENSE_CONFIG.BASE_CLOUD_COST / 4 / 7); // Base cloud cost daily
 
-      const totalDailyExpenses =
-        officeWorkerCost + supportStaffCost + rentAndLegalCost + cloudCost;
-
-      if (totalDailyExpenses > 0) {
+      if (monthlyExpenses.total > 0) {
         set((state: GameState) => ({
           ...state,
-          cash: state.cash - totalDailyExpenses,
-          weeklyExpenses: state.weeklyExpenses + totalDailyExpenses,
+          cash: state.cash - monthlyExpenses.total,
+          weeklyExpenses: state.weeklyExpenses + monthlyExpenses.total,
           lastExpenseCheck: newGameDays,
         }));
 
-        // Show notification for significant expense days
-        if (totalDailyExpenses > 1000) {
-          toast.info(
-            `💸 Daily expenses: -€${totalDailyExpenses.toLocaleString()}`,
-            {
-              description: `Staff salaries, rent & operational costs deducted`,
-            }
-          );
-        }
+        // Show notification for monthly expenses
+        toast.info(
+          `💸 Monthly expenses: -€${monthlyExpenses.total.toLocaleString()}`,
+          {
+            description: `Salaries: €${(
+              monthlyExpenses.officeWorkerSalaries +
+              monthlyExpenses.supportStaffSalaries
+            ).toLocaleString()}, Rent: €${monthlyExpenses.rentAndLegal.toLocaleString()}, Cloud: €${monthlyExpenses.cloudCosts.toLocaleString()}`,
+          }
+        );
 
         // Show warning if cash is getting low
-        const newCash = currentState.cash - totalDailyExpenses;
-        if (newCash < 5000 && newCash > 0) {
-          // Reduced warning threshold for new balance
+        const newCash = currentState.cash - monthlyExpenses.total;
+        if (newCash < 20000 && newCash > 0) {
           toast.warning(`⚠️ Cash running low: €${newCash.toLocaleString()}`, {
             description: "Consider reducing expenses or increasing revenue",
           });

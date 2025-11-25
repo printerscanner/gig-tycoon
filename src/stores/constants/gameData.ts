@@ -1,12 +1,19 @@
 import type { WorkerTrait } from "@/types";
 
 // Worker names for random generation
-export const WORKER_NAMES = ["Alex", "Sam", "Jordan", "Casey", "Taylor", "Morgan"];
+export const WORKER_NAMES = [
+  "Alex",
+  "Sam",
+  "Jordan",
+  "Casey",
+  "Taylor",
+  "Morgan",
+];
 
 // Office worker names
 export const OFFICE_WORKER_NAMES = [
   "Emma",
-  "Liam", 
+  "Liam",
   "Olivia",
   "Noah",
   "Ava",
@@ -25,7 +32,7 @@ export const OFFICE_WORKER_NAMES = [
 // Support staff names
 export const SUPPORT_STAFF_NAMES = [
   "Jordan",
-  "Riley", 
+  "Riley",
   "Avery",
   "Quinn",
   "Drew",
@@ -38,7 +45,11 @@ export const SUPPORT_STAFF_NAMES = [
 export const WORKER_TRAITS: WorkerTrait[] = [
   { name: "Reliable", description: "Always on time", effect: "positive" },
   { name: "Hustler", description: "Works extra fast", effect: "positive" },
-  { name: "Burnout-prone", description: "Happiness drops quickly", effect: "negative" },
+  {
+    name: "Burnout-prone",
+    description: "Happiness drops quickly",
+    effect: "negative",
+  },
   { name: "Lazy", description: "Moves slowly", effect: "negative" },
   { name: "Stressed", description: "Makes more mistakes", effect: "negative" },
   { name: "Optimist", description: "Stays happy longer", effect: "positive" },
@@ -47,7 +58,7 @@ export const WORKER_TRAITS: WorkerTrait[] = [
 // Sarcastic messages for unhappy workers
 export const SARCASTIC_MESSAGES = [
   "Guess I'll eat instant noodles again lol",
-  "Living the dream on minimum wage! 🙃", 
+  "Living the dream on minimum wage! 🙃",
   "Another day, another dollar... wait, make that 50 cents",
   "My landlord will understand, right?",
   "Time to update my LinkedIn... again",
@@ -57,14 +68,14 @@ export const SARCASTIC_MESSAGES = [
 export const JOB_DESCRIPTIONS = {
   delivery: [
     "🍕 Tony's Pizza → Apartment",
-    "🍔 Burger Express → Office Building", 
+    "🍔 Burger Express → Office Building",
     "🥗 Fresh Salads → Home",
     "🍜 Noodle House → University",
     "🌮 Taco Fiesta → Business District",
     "🍣 Sushi Zone → Residential",
     "🍗 Chicken Palace → Hospital",
     "🥪 Deli Corner → School",
-    "🍝 Pasta Central → Hotel", 
+    "🍝 Pasta Central → Hotel",
     "🍰 Sweet Treats → Apartment Complex",
     "☕ Coffee Roasters → Office Tower",
     "🥘 Curry Express → Shopping Mall",

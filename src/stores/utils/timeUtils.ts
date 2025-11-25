@@ -18,3 +18,16 @@ export const isNewDay = (
 ): boolean => {
   return getCurrentDay(currentDays) > getCurrentDay(previousDays);
 };
+
+// Get the current month number (1-based, assuming 30 days per month)
+export const getCurrentMonth = (gameDays: number): number => {
+  return Math.floor(gameDays / 30) + 1;
+};
+
+// Check if it's a new month since last check (every 30 days)
+export const isNewMonth = (
+  currentDays: number,
+  previousDays: number
+): boolean => {
+  return getCurrentMonth(currentDays) > getCurrentMonth(previousDays);
+};

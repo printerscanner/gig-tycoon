@@ -1,7 +1,7 @@
 // Game configuration constants
 export const GAME_CONFIG = {
   GRID_SIZE: 12,
-  STARTING_CASH: 10000, // Reduced from 400k to 10k for better progression
+  STARTING_CASH: 10000,
   STARTING_REPUTATION: 50,
   STARTING_WORKER_MORALE: 75,
   PLATFORM_COMMISSION_DEFAULT: 20,
@@ -92,6 +92,6 @@ export const INVESTOR_CONFIG = {
 
 // Time system configuration
 export const TIME_CONFIG = {
-  DAYS_PER_REAL_SECOND: 0.002, // 0.002 game days per real second = ~8 minutes real time per game day
+  DAYS_PER_REAL_SECOND: 365 / 7200, // 365 game days = 1 real hour (exact calculation)
   STARTING_DAY: 1, // Start at day 1
 } as const;

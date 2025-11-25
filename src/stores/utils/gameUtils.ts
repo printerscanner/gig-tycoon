@@ -1,5 +1,5 @@
-import { GAME_CONFIG } from "../constants/gameConstants";
-import type { OfficeWorker } from "@/types";
+import { GAME_CONFIG, EXPENSE_CONFIG } from "../constants/gameConstants";
+import type { OfficeWorker, Worker, SupportWorker } from "@/types";
 
 // Generate a unique ID
 export const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -104,6 +104,48 @@ export const calculateDailyOfficeWages = (officeWorkers: OfficeWorker[]) => {
     (total, worker) => total + worker.monthlySalary / daysPerMonth,
     0
   );
+};
+
+// Calculate total monthly expenses (rent, salaries, infrastructure)
+export const calculateMonthlyExpenses = (
+  workers: Worker[],
+  officeWorkers: OfficeWorker[],
+  supportStaff: SupportWorker[]
+) => {
+  const {
+    BASE_RENT_LEGAL,
+    RENT_PER_COURIER,
+    RENT_PER_OFFICE_WORKER,
+    BASE_CLOUD_COST,
+  } = EXPENSE_CONFIG;
+
+  // Base costs
+  const rentAndLegal =
+    BASE_RENT_LEGAL +
+    workers.length * RENT_PER_COURIER +
+    officeWorkers.length * RENT_PER_OFFICE_WORKER;
+
+  const cloudCosts = BASE_CLOUD_COST;
+
+  // Salaries
+  const officeWorkerSalaries = officeWorkers.reduce(
+    (total, worker) => total + worker.monthlySalary,
+    0
+  );
+
+  const supportStaffSalaries = supportStaff.reduce(
+    (total, staff) => total + (staff.monthlySalary || 2500),
+    0
+  );
+
+  return {
+    rentAndLegal,
+    cloudCosts,
+    officeWorkerSalaries,
+    supportStaffSalaries,
+    total:
+      rentAndLegal + cloudCosts + officeWorkerSalaries + supportStaffSalaries,
+  };
 };
 
 // Calculate distance between two points (Manhattan distance for grid-based movement)
