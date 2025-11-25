@@ -92,6 +92,6 @@ export const INVESTOR_CONFIG = {
 
 // Time system configuration
 export const TIME_CONFIG = {
-  DAYS_PER_REAL_SECOND: 365 / 7200, // 365 game days = 1 real hour (exact calculation)
+  DAYS_PER_REAL_SECOND: 0.0002, // 365 game days = 1 real hour (exact calculation)
   STARTING_DAY: 1, // Start at day 1
 } as const;

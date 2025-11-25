@@ -408,7 +408,7 @@ export const createGameStateActions = (set: SetState, get: GetState) => ({
         })
         .filter((worker: Worker | null) => worker !== null); // Remove workers who quit
 
-      // Move workers towards their target (enhanced AI movement)
+      // Move workers towards their target (simplified for real map)
       const updatedWorkers = statusUpdatedWorkers.map((worker: Worker) => {
         if (worker.assignedJobId && !worker.targetPosition) {
           // If worker has a job but no target, set target to pickup location

@@ -50,7 +50,7 @@ export function WorkersModal() {
           👥 Workers
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden">
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden z-[2000]">
         <DialogHeader>
           <DialogTitle>👥 Worker Management</DialogTitle>
         </DialogHeader>

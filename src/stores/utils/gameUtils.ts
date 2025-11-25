@@ -15,12 +15,17 @@ export const isRoadPosition = (row: number, col: number) => {
   );
 };
 
-// Generate a random road position for worker spawning
+// Generate a random road position for worker spawning (constrained to visible map area)
 export const generateRandomRoadPosition = () => {
-  const { GRID_SIZE } = GAME_CONFIG;
   const roads = [];
-  for (let row = 0; row < GRID_SIZE; row++) {
-    for (let col = 0; col < GRID_SIZE; col++) {
+  // Constrain to central area of grid that corresponds to visible Berlin map
+  const minRow = 2; // Skip edges to stay within visible bounds
+  const maxRow = 9;
+  const minCol = 2;
+  const maxCol = 9;
+  
+  for (let row = minRow; row <= maxRow; row++) {
+    for (let col = minCol; col <= maxCol; col++) {
       if (isRoadPosition(row, col)) {
         roads.push({ row, col });
       }
@@ -29,12 +34,17 @@ export const generateRandomRoadPosition = () => {
   return roads[Math.floor(Math.random() * roads.length)];
 };
 
-// Generate a random building position for job pickup/dropoff (no roads)
+// Generate a random building position for job pickup/dropoff (constrained to visible map area)
 export const generateRandomBuildingPosition = () => {
-  const { GRID_SIZE } = GAME_CONFIG;
   const buildings = [];
-  for (let row = 0; row < GRID_SIZE; row++) {
-    for (let col = 0; col < GRID_SIZE; col++) {
+  // Constrain to central area of grid that corresponds to visible Berlin map
+  const minRow = 2; // Skip edges to stay within visible bounds
+  const maxRow = 9;
+  const minCol = 2;
+  const maxCol = 9;
+  
+  for (let row = minRow; row <= maxRow; row++) {
+    for (let col = minCol; col <= maxCol; col++) {
       if (!isRoadPosition(row, col)) {
         buildings.push({ row, col });
       }

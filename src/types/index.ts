@@ -20,6 +20,8 @@ export interface Worker {
   mood: number; // 0-100, affects tips and likelihood to quit/get sick
   lastMoodCheck: number; // Last time mood was evaluated
   totalHoursWorked: number; // Track total hours worked for this worker
+  currentRoute?: Array<{ lat: number; lng: number }>; // Current route being followed
+  routeProgress?: number; // Progress along current route (0-1)
 }
 
 export interface WorkerTrait {

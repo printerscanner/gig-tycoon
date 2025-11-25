@@ -84,7 +84,7 @@ export function OrdersModal() {
           📋 Orders
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden">
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-hidden z-[2000]">
         <DialogHeader>
           <DialogTitle>📋 Order Management</DialogTitle>
         </DialogHeader>

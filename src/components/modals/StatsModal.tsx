@@ -43,7 +43,7 @@ export function StatsModal() {
           📊 Stats
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl z-[2000]">
         <DialogHeader>
           <DialogTitle>📊 Game Statistics</DialogTitle>
         </DialogHeader>

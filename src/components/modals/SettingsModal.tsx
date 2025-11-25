@@ -31,7 +31,7 @@ export function SettingsModal() {
           ⚙️ Settings
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl z-[2000]">
         <DialogHeader>
           <DialogTitle>⚙️ Business Settings</DialogTitle>
         </DialogHeader>
