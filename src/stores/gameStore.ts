@@ -1478,7 +1478,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   autoAssignJobs: () => {
-  const state = get();
+    const state = get();
     const availableWorkers = state.workers.filter(
       (w) => !w.isWorking && w.isOnline && !w.isSick
     );
@@ -1496,7 +1496,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       });
     }
 
-  if (availableWorkers.length === 0 || pendingJobs.length === 0) return;
+    if (availableWorkers.length === 0 || pendingJobs.length === 0) return;
 
     // Sort jobs by urgency (highest first) and payment (highest first)
     const sortedJobs = pendingJobs.sort((a, b) => {
