@@ -1,14 +1,14 @@
-import { useEffect } from "react";
-import { useGameStore } from "@/stores/gameStore";
+import { useEffect } from 'react'
+import { useGameStore } from '../store'
+import { TICK_MS } from '../constants'
 
 export function useGameLoop() {
-  const updateGameState = useGameStore((state) => state.updateGameState);
+  const advance = useGameStore(s => s.advance)
+  const phase = useGameStore(s => s.phase)
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      updateGameState();
-    }, 500); // Reduced from 1000ms to 500ms for faster movement
-
-    return () => clearInterval(interval);
-  }, [updateGameState]);
+    if (phase !== 'running') return
+    const id = setInterval(advance, TICK_MS)
+    return () => clearInterval(id)
+  }, [advance, phase])
 }
