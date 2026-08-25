@@ -1,13 +1,14 @@
 import { useGameStore } from './store'
 import { useGameLoop } from './hooks/useGameLoop'
 import { renderMap } from './map'
-import { COURIER_HIRE_COST, RESTAURANTS } from './constants'
+import { COURIER_HIRE_COST } from './constants'
 
 export default function App() {
   useGameLoop()
 
   const state = useGameStore()
-  const { phase, day, cash, couriers, jobs, log, hireCourier, togglePause, restart } = state
+  const { phase, day, hour, cash, couriers, jobs, log, hireCourier, togglePause, restart } = state
+
 
   if (phase === 'gameover') {
     return (
@@ -21,13 +22,9 @@ export default function App() {
   const pending = jobs.filter(j => j.status === 'pending')
 
   const lines: string[] = []
-
-  lines.push(`GIG TYCOON  |  day ${day}  |  cash $${cash}`)
+  lines.push(`GIG TYCOON  |  day ${day} | time ${hour}  |  cash $${cash}`)
   lines.push('')
   lines.push(renderMap(state))
-  lines.push('')
-  lines.push(RESTAURANTS.map(r => `${r.label}=${r.name}`).join('  '))
-  lines.push('(lowercase letter = courier position,  * = delivery target)')
   lines.push('')
   lines.push(`COURIERS (${couriers.length})`)
   for (const c of couriers) {
@@ -35,7 +32,7 @@ export default function App() {
     let status = 'idle'
     if (c.status === 'to_pickup' && job)  status = `going to pick up at ${job.pickupName}`
     if (c.status === 'to_dropoff' && job) status = `delivering to ${job.dropoffName}`
-    lines.push(`  ${c.name.padEnd(8)} ${status} income: $${c.income}`)
+    lines.push(`  ${c.name.padEnd(8)} income: $${c.income} status: ${status}`)
   }
   lines.push('')
   if (pending.length > 0) {

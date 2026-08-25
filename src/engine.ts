@@ -4,7 +4,7 @@
 
 import type { GameState, Pos, Job } from './types'
 import {
-  TICKS_PER_DAY, GAMEOVER_CASH,
+  HOURS_PER_DAY, GAMEOVER_CASH,
   JOB_SPAWN_INTERVAL, MAX_PENDING_JOBS,
   JOB_PAYOUT_MIN, JOB_PAYOUT_MAX, COURIER_INCOME_MIN, COURIER_INCOME_MAX,
   LOG_MAX, RESTAURANTS, DROPOFFS,
@@ -45,9 +45,9 @@ function same(a: Pos, b: Pos) {
 export function tick(state: GameState): Partial<GameState> {
   if (state.phase !== 'running') return {}
 
-  const nextTick = state.tickOfDay + 1
-  const isNewDay = nextTick >= TICKS_PER_DAY
-  const tickOfDay = isNewDay ? 0 : nextTick
+  const nextTick = state.hour + 1
+  const isNewDay = nextTick >= HOURS_PER_DAY
+  const hour = isNewDay ? 0 : nextTick
   const day = isNewDay ? state.day + 1 : state.day
 
   let cash = state.cash
@@ -96,7 +96,7 @@ export function tick(state: GameState): Partial<GameState> {
 
   // ── Spawn new job ─────────────────────────────────────────────────────────
   const pendingCount = jobs.filter(j => j.status === 'pending').length
-  if (tickOfDay % JOB_SPAWN_INTERVAL === 0 && pendingCount < MAX_PENDING_JOBS) {
+  if (hour % JOB_SPAWN_INTERVAL === 0 && pendingCount < MAX_PENDING_JOBS) {
     jobs.push(spawnJob())
   }
 
@@ -109,5 +109,5 @@ export function tick(state: GameState): Partial<GameState> {
   // ── Game over ─────────────────────────────────────────────────────────────
   const phase = cash <= GAMEOVER_CASH ? 'gameover' : state.phase
 
-  return { day, tickOfDay, cash, couriers, jobs: nextJobs, log: nextLog, phase }
+  return { day, hour, cash, couriers, jobs: nextJobs, log: nextLog, phase }
 }

@@ -24,12 +24,19 @@ export interface Job {
   payout: number
 }
 
+export type Toast = {
+  id: number
+  message: string
+}
+
+
 export interface GameState {
   phase: Phase
   day: number
-  tickOfDay: number
+  hour: number
   cash: number
   couriers: Courier[]
   jobs: Job[]
   log: string[]
+  toast: Toast | null
 }

@@ -1,3 +1,28 @@
 body {
   font-family: monospace;
 }
+
+.toast__message {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  padding: 12px 16px;
+  padding-right: 40px;
+  border: 1px solid;
+  border-radius: 3px;
+  max-width: 500px;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toast__close-button {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 4px;
+}

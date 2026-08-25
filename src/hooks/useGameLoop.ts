@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useGameStore } from '../store'
-import { TICK_MS } from '../constants'
+import { MS_PER_HOUR } from '../constants'
 
 export function useGameLoop() {
   const advance = useGameStore(s => s.advance)
@@ -8,7 +8,7 @@ export function useGameLoop() {
 
   useEffect(() => {
     if (phase !== 'running') return
-    const id = setInterval(advance, TICK_MS)
+    const id = setInterval(advance, MS_PER_HOUR)
     return () => clearInterval(id)
   }, [advance, phase])
 }
