@@ -35,7 +35,7 @@ export default function App() {
     let status = 'idle'
     if (c.status === 'to_pickup' && job)  status = `going to pick up at ${job.pickupName}`
     if (c.status === 'to_dropoff' && job) status = `delivering to ${job.dropoffName}`
-    lines.push(`  ${c.name.padEnd(8)} ${status}`)
+    lines.push(`  ${c.name.padEnd(8)} ${status} income: $${c.income}`)
   }
   lines.push('')
   if (pending.length > 0) {

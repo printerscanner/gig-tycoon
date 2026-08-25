@@ -9,6 +9,7 @@ export interface Courier {
   name: string
   pos: Pos
   status: CourierStatus
+  income: number
   jobId: string | null
 }
 

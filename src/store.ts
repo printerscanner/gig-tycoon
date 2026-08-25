@@ -1,17 +1,16 @@
 import { create } from 'zustand'
 import type { GameState } from './types'
-import { INITIAL_CASH, COURIER_HIRE_COST, DEPOT, LOG_MAX } from './constants'
+import { PRESEED_INVESTMENT, COURIER_HIRE_COST, DEPOT, LOG_MAX, NAMES, COURIERS } from './constants'
 import { tick } from './engine'
 
-const NAMES = ['Alex', 'Sam', 'Jordan', 'Riley', 'Morgan', 'Casey', 'Taylor']
 
 function fresh(): GameState {
   return {
     phase: 'running',
     day: 1,
     tickOfDay: 0,
-    cash: INITIAL_CASH,
-    couriers: [{ id: 'c1', name: 'Alex', pos: { ...DEPOT }, status: 'idle', jobId: null }],
+    cash: PRESEED_INVESTMENT,
+    couriers: COURIERS,
     jobs: [],
     log: ['game started'],
   }
@@ -42,7 +41,7 @@ export const useGameStore = create<GameStore>((set) => ({
         cash: state.cash - COURIER_HIRE_COST,
         couriers: [
           ...state.couriers,
-          { id: `c${nextCourierId}`, name, pos: { ...DEPOT }, status: 'idle' as const, jobId: null },
+          { id: `c${nextCourierId}`, name, pos: { ...DEPOT }, income: 0, status: 'idle' as const, jobId: null },
         ],
         log: [`hired ${name}`, ...state.log].slice(0, LOG_MAX),
       }

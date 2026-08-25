@@ -4,15 +4,15 @@
 
 import type { GameState, Pos, Job } from './types'
 import {
-  TICKS_PER_DAY, COURIER_DAILY_WAGE, GAMEOVER_CASH,
+  TICKS_PER_DAY, GAMEOVER_CASH,
   JOB_SPAWN_INTERVAL, MAX_PENDING_JOBS,
-  JOB_PAYOUT_MIN, JOB_PAYOUT_MAX,
+  JOB_PAYOUT_MIN, JOB_PAYOUT_MAX, COURIER_INCOME_MIN, COURIER_INCOME_MAX,
   LOG_MAX, RESTAURANTS, DROPOFFS,
 } from './constants'
 
 let nextJobId = 1
 
-function rnd(min: number, max: number) {
+export function rnd(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
@@ -51,14 +51,8 @@ export function tick(state: GameState): Partial<GameState> {
   const day = isNewDay ? state.day + 1 : state.day
 
   let cash = state.cash
-  const log = [...state.log]
 
-  // ── Pay daily wages ───────────────────────────────────────────────────────
-  if (isNewDay && state.couriers.length > 0) {
-    const wages = state.couriers.length * COURIER_DAILY_WAGE
-    cash -= wages
-    log.unshift(`day ${day}: paid $${wages} wages`)
-  }
+  const log = [...state.log]
 
   // ── Move couriers and resolve arrivals ────────────────────────────────────
   const jobs = state.jobs.map(j => ({ ...j }))
@@ -77,10 +71,11 @@ export function tick(state: GameState): Partial<GameState> {
       courier.pos = step(courier.pos, job.dropoffPos)
       if (same(courier.pos, job.dropoffPos)) {
         job.status = 'complete'
-        cash += job.payout
+        courier.income += rnd(COURIER_INCOME_MIN,COURIER_INCOME_MAX)
+        cash += job.payout - courier.income
         courier.status = 'idle'
         courier.jobId = null
-        log.unshift(`${courier.name} delivered to ${job.dropoffName}  +$${job.payout}`)
+        log.unshift(`${courier.name} delivered to ${job.dropoffName}  +$${job.payout} income: $${courier.income}`)
       }
     }
   }

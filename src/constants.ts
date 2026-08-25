@@ -1,4 +1,5 @@
-import type { Pos } from './types'
+import type { Pos, Courier } from './types'
+import { rnd } from './engine'
 
 // ── Time ─────────────────────────────────────────────────────────────────────
 export const TICK_MS = 400
@@ -29,16 +30,22 @@ export const DROPOFFS: { name: string; pos: Pos }[] = [
 // Couriers spawn here
 export const DEPOT: Pos = { x: 10, y: 4 }
 
+export const NAMES = ['Arif', 'Tanvir', 'Mehedi', 'Riley', 'Arjun', 'Casey', 'Taylor']
+
+export const COURIERS: Courier[] = [{ id: 'c1', name: NAMES[rnd(0, NAMES.length)], pos: { ...DEPOT }, status: 'idle', income: 0, jobId: null }]
+
+
 // ── Economy ───────────────────────────────────────────────────────────────────
-export const INITIAL_CASH = 600
+export const PRESEED_INVESTMENT = 600
 export const GAMEOVER_CASH = -300
 export const COURIER_HIRE_COST = 200
-export const COURIER_DAILY_WAGE = 40
+export const COURIER_INCOME_MIN = 2
+export const COURIER_INCOME_MAX = 5
 export const JOB_PAYOUT_MIN = 14
 export const JOB_PAYOUT_MAX = 28
 
 // ── Jobs ─────────────────────────────────────────────────────────────────────
-export const JOB_SPAWN_INTERVAL = 5     // every N ticks a new job appears
+export const JOB_SPAWN_INTERVAL = 5     
 export const MAX_PENDING_JOBS = 4
 
 // ── Log ──────────────────────────────────────────────────────────────────────
