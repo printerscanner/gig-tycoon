@@ -13,7 +13,13 @@ function fresh(): GameState {
     couriers: COURIERS,
     jobs: [],
     log: ['game started'],
-    toast: INITIAL_TOAST 
+    toast: INITIAL_TOAST, 
+    spreadsheet: {
+      ordersCompleted: 0,
+      customers: 0,
+      revenue: 0,
+      gmv: 0,
+    },
   }
 }
 

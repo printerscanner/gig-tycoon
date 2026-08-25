@@ -1,0 +1,165 @@
+.spreadsheet__open-button {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 100;
+
+  padding: 10px 16px;
+  border: 1px solid #222;
+  border-radius: 3px;
+  background: white;
+  color: #222;
+
+  font-family: monospace;
+  font-size: 14px;
+  cursor: pointer;
+
+  box-shadow: 2px 2px 0 #222;
+}
+
+.spreadsheet__open-button:hover {
+  background: #f2f2f2;
+}
+
+.spreadsheet__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.spreadsheet__modal {
+  width: 700px;
+  max-width: calc(100vw - 40px);
+
+  background: white;
+  border: 1px solid #222;
+  border-radius: 4px;
+
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.2);
+
+  font-family: monospace;
+}
+
+.spreadsheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 14px 16px;
+
+  border-bottom: 1px solid #222;
+}
+
+.spreadsheet__title {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.spreadsheet__subtitle {
+  margin-top: 3px;
+  color: #666;
+  font-size: 12px;
+}
+
+.spreadsheet__close {
+  border: none;
+  background: none;
+
+  font-family: monospace;
+  font-size: 24px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.spreadsheet__spreadsheet {
+  width: 100%;
+}
+
+.spreadsheet__row {
+  display: grid;
+  grid-template-columns: 45px 1fr 180px;
+  min-height: 42px;
+
+  border-bottom: 1px solid #ddd;
+}
+
+.spreadsheet__row > div,
+.spreadsheet__row > input {
+  display: flex;
+  align-items: center;
+
+  padding: 8px 12px;
+
+  border-right: 1px solid #ddd;
+}
+
+.spreadsheet__row > :last-child {
+  border-right: none;
+}
+
+.spreadsheet__row--header {
+  background: #f0f0f0;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.spreadsheet__number {
+  justify-content: center;
+  color: #888;
+}
+
+.spreadsheet__name {
+  color: #222;
+}
+
+.spreadsheet__value {
+  width: 100%;
+  box-sizing: border-box;
+
+  border: none;
+  outline: none;
+
+  background: white;
+  color: #222;
+
+  font-family: monospace;
+  font-size: 14px;
+}
+
+.spreadsheet__value:focus {
+  background: #fffde5;
+  outline: 2px solid #4d90fe;
+  outline-offset: -2px;
+}
+
+.spreadsheet__footer {
+  display: flex;
+  justify-content: flex-end;
+
+  padding: 12px 16px;
+}
+
+.spreadsheet__done {
+  padding: 8px 16px;
+
+  border: 1px solid #222;
+  border-radius: 3px;
+
+  background: #222;
+  color: white;
+
+  font-family: monospace;
+  cursor: pointer;
+}
+
+.spreadsheet__done:hover {
+  background: #444;
+}
+

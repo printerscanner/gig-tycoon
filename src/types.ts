@@ -29,6 +29,13 @@ export type Toast = {
   message: string
 }
 
+export type Gamespreadsheet = {
+  ordersCompleted: number
+  customers: number
+  revenue: number
+  gmv: number
+}
+
 
 export interface GameState {
   phase: Phase
@@ -39,4 +46,5 @@ export interface GameState {
   jobs: Job[]
   log: string[]
   toast: Toast | null
+  spreadsheet: Gamespreadsheet
 }

@@ -45,6 +45,10 @@ function same(a: Pos, b: Pos) {
 export function tick(state: GameState): Partial<GameState> {
   if (state.phase !== 'running') return {}
 
+    const spreadsheet = {
+  ...state.spreadsheet,
+  }
+
   const nextTick = state.hour + 1
   const isNewDay = nextTick >= HOURS_PER_DAY
   const hour = isNewDay ? 0 : nextTick
@@ -76,6 +80,31 @@ export function tick(state: GameState): Partial<GameState> {
         courier.status = 'idle'
         courier.jobId = null
         log.unshift(`${courier.name} delivered to ${job.dropoffName}  +$${job.payout} income: $${courier.income}`)
+
+        if (same(courier.pos, job.dropoffPos)) {
+          job.status = 'complete'
+
+          const courierIncome = rnd(
+            COURIER_INCOME_MIN,
+            COURIER_INCOME_MAX
+          )
+
+          courier.income += courierIncome
+
+          cash += job.payout - courierIncome
+
+          courier.status = 'idle'
+          courier.jobId = null
+          spreadsheet.ordersCompleted += 1
+          spreadsheet.revenue += job.payout
+          spreadsheet.gmv += job.payout
+
+
+          log.unshift(
+            `${courier.name} delivered to ${job.dropoffName} +$${job.payout}`
+          )
+        }
+
       }
     }
   }
@@ -109,5 +138,5 @@ export function tick(state: GameState): Partial<GameState> {
   // ── Game over ─────────────────────────────────────────────────────────────
   const phase = cash <= GAMEOVER_CASH ? 'gameover' : state.phase
 
-  return { day, hour, cash, couriers, jobs: nextJobs, log: nextLog, phase }
+  return { day, hour, spreadsheet, cash, couriers, jobs: nextJobs, log: nextLog, phase }
 }
